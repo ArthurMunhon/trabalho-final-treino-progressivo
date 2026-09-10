@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Aluno {
+  id      String @id @default(uuid())
+  nome    String
+  email   String
+  fichas  Ficha[]
+  sessao_treino Sessao_Treino[]
+}
+
+model Ficha{
+  id          String @id @default(uuid())
+  alunoId     String
+  aluno       Aluno @relation(fields: [alunoId], references: [id])
+  personalId  String
+  personal    Personal @relation(fields: [personalId], references: [id])
+  sessao_treino Sessao_Treino[]
+  itens         Item_Ficha[]
+}
+model Personal{
+  id    String @id @default(uuid())
+  nome  String
+  fichas Ficha[]
+}
+
+model Sessao_Treino {
+  id        String @id @default(uuid())
+  alunoId   String
+  aluno     Aluno @relation(fields: [alunoId], references: [id])
+  fichaId   String
+  ficha     Ficha @relation(fields: [fichaId], references: [id])
+  serie_executada Serie_Executada[]
+  data            DateTime
+}
+
+model Serie_Executada {
+  id               String @id @default(uuid())
+  sessao_treinoId  String
+  sessao_treino    Sessao_Treino @relation(fields: [sessao_treinoId], references: [id])
+  numero_Serie     Int
+  cargaUsada       Float
+  repeticoesFeitas Int
+  itemFichaId      String
+  itemFicha        Item_Ficha @relation(fields: [itemFichaId], references: [id])
+}
+
+model Item_Ficha {
+  id        String @id @default(uuid())
+  fichaId   String
+  ficha     Ficha @relation(fields: [fichaId], references: [id])
+  exercicioId String
+  exercicio Exercicio @relation(fields: [exercicioId], references: [id])
+  ordem     Int
+  seriesAlvo Int
+  repeticoesAlvo Int
+  cargaSugerida     Float
+  series_executadas Serie_Executada[]
+}
+
+model Exercicio {
+  id      String @id @default(uuid())
+  nome    String
+  grupoMuscular String
+  item_ficha Item_Ficha[]
+}
