@@ -8,12 +8,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Nome do projeto** | _(ex: Central de Suporte Interno)_ |
-| **Grupo** | _(nome ou número do grupo)_ |
-| **Integrantes** | _(nomes — detalhamento em `docs/equipe.md`)_ |
+| **Nome do projeto** | Treino_Progressivo |
+| **Grupo** | 2 |
+| **Integrantes** | Arthur Munhon,  |
 | **Disciplina** | Programação Web e Mobile |
-| **Data de criação** | |
-| **Última atualização** | |
+| **Data de criação** | 01/09/26 |
+| **Última atualização** |  |
 | **Versão** | 1.0 |
 
 ---

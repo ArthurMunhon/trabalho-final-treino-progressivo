@@ -5,7 +5,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -13,10 +13,13 @@ datasource db {
 }
 
 model Aluno {
-  id      String @id @default(uuid())
-  nome    String
-  email   String
-  fichas  Ficha[]
+  id            String   @id @default(uuid())
+  nome          String
+  email         String   @unique
+  senha         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  fichas        Ficha[]
   sessao_treino Sessao_Treino[]
 }
 
@@ -28,10 +31,14 @@ model Ficha{
   personal    Personal @relation(fields: [personalId], references: [id])
   sessao_treino Sessao_Treino[]
   itens         Item_Ficha[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 model Personal{
-  id    String @id @default(uuid())
-  nome  String
+  id     String @id @default(uuid())
+  nome   String
+  email  String @unique
+  senha  String
   fichas Ficha[]
 }
 
@@ -43,6 +50,12 @@ model Sessao_Treino {
   ficha     Ficha @relation(fields: [fichaId], references: [id])
   serie_executada Serie_Executada[]
   data            DateTime
+  situacao        SituacaoSessao @default(em_andamento)
+}
+
+enum SituacaoSessao {
+  em_andamento
+  finalizada
 }
 
 model Serie_Executada {
@@ -59,7 +72,7 @@ model Serie_Executada {
 model Item_Ficha {
   id        String @id @default(uuid())
   fichaId   String
-  ficha     Ficha @relation(fields: [fichaId], references: [id])
+  ficha     Ficha @relation(fields: [fichaId], references: [id], onDelete: Cascade)
   exercicioId String
   exercicio Exercicio @relation(fields: [exercicioId], references: [id])
   ordem     Int
@@ -70,8 +83,10 @@ model Item_Ficha {
 }
 
 model Exercicio {
-  id      String @id @default(uuid())
-  nome    String
+  id            String   @id @default(uuid())
+  nome          String
   grupoMuscular String
-  item_ficha Item_Ficha[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  item_ficha    Item_Ficha[]
 }

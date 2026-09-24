@@ -1,0 +1,58 @@
+@baseUrl = http://localhost:3000
+
+### Listar alunos (paginado)
+GET {{baseUrl}}/alunos?page=1&limit=20
+
+### Buscar aluno por nome ou email
+GET {{baseUrl}}/alunos?busca=marcos
+
+### Criar aluno (sucesso, 201 esperado, sem senha na resposta)
+POST {{baseUrl}}/alunos
+Content-Type: application/json
+
+{
+  "nome": "Marcos Vinicius",
+  "email": "marcos@exemplo.com",
+  "senha": "senha-provisoria-123"
+}
+
+> {%
+    client.global.set("alunoId", response.body.id);
+%}
+
+### Criar aluno com email duplicado (409 esperado)
+POST {{baseUrl}}/alunos
+Content-Type: application/json
+
+{
+  "nome": "Outro",
+  "email": "marcos@exemplo.com",
+  "senha": "123"
+}
+
+### Criar aluno invalido (400 esperado, email mal formado)
+POST {{baseUrl}}/alunos
+Content-Type: application/json
+
+{
+  "nome": "X",
+  "email": "nao-e-email",
+  "senha": "123"
+}
+
+### Obter aluno criado acima (200 esperado, sem senha)
+GET {{baseUrl}}/alunos/{{alunoId}}
+
+### Obter aluno inexistente (404 esperado)
+GET {{baseUrl}}/alunos/00000000-0000-0000-0000-000000000000
+
+### Atualizar aluno criado acima (200 esperado)
+PATCH {{baseUrl}}/alunos/{{alunoId}}
+Content-Type: application/json
+
+{
+  "nome": "Marcos V."
+}
+
+### Deletar Aluno
+DELETE {{baseUrl}}/alunos/{{alunoId}}

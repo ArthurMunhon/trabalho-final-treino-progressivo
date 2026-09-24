@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:3000
+
+### Listar exercicios (paginado)
+GET {{baseUrl}}/exercicios?page=1&limit=20
+
+### Listar exercicios filtrando por grupo muscular
+GET {{baseUrl}}/exercicios?grupoMuscular=peito
+
+### Criar exercicio (sucesso, 201 esperado)
+POST {{baseUrl}}/exercicios
+Content-Type: application/json
+
+{
+  "nome": "Supino reto com barra",
+  "grupoMuscular": "peito"
+}
+
+> {%
+    client.global.set("exercicioId", response.body.id);
+%}
+
+### Criar exercicio invalido (400 esperado)
+POST {{baseUrl}}/exercicios
+Content-Type: application/json
+
+{
+  "nome": ""
+}
+
+### Obter exercicio criado acima (200 esperado)
+GET {{baseUrl}}/exercicios/{{exercicioId}}
+
+### Obter exercicio inexistente (404 esperado)
+GET {{baseUrl}}/exercicios/00000000-0000-0000-0000-000000000000
+
+### Atualizar exercicio criado acima (200 esperado)
+PATCH {{baseUrl}}/exercicios/{{exercicioId}}
+Content-Type: application/json
+
+{
+  "grupoMuscular": "costas"
+}
+
+### Remover exercicio criado acima (204 esperado)
+DELETE {{baseUrl}}/exercicios/{{exercicioId}}
+
+### Confirmar remocao (404 esperado)
+GET {{baseUrl}}/exercicios/{{exercicioId}}

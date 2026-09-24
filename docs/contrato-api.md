@@ -1,6 +1,6 @@
 # Contrato da API
 
-> **Instruções:** Este documento especifica a interface REST que o backend expõe e que os dois clientes consomem. Deve ser entregue ao final da **Etapa 1** e mantido atualizado a cada mudança de endpoint. Remova os blocos `> instrução` após preenchê-los.
+> Este documento especifica a interface REST que o backend expõe e que os dois clientes consomem. Mantido atualizado a cada mudança de endpoint.
 
 ---
 
@@ -10,7 +10,7 @@ O grupo trabalha em paralelo em três componentes, com menos gente do que frente
 
 Duas regras práticas decorrem disso:
 
-1. **O contrato muda antes do código, nunca depois.** Quem precisa alterar um endpoint atualiza este documento e avisa o grupo no mesmo dia. Descobrir a mudança quando a tela quebra custa o dobro.
+1. **O contrato muda antes do código, nunca depois.** Quem precisa alterar um endpoint atualiza este documento e avisa o grupo no mesmo dia.
 2. **O contrato é a especificação, não a documentação.** Se ele descreve um comportamento e a API faz outro, o defeito está na API — a menos que o grupo decida conscientemente mudar o contrato.
 
 A régua de qualidade é esta: na entrega final, o contrato precisa ser suficiente para que um quarto cliente seja escrito **sem nenhuma pergunta ao grupo**.
@@ -21,13 +21,15 @@ A régua de qualidade é esta: na entrega final, o contrato precisa ser suficien
 
 | Campo | Valor |
 |---|---|
-| **Projeto** | |
-| **Versão do contrato** | 1.0 |
-| **Última atualização** | |
+| **Projeto** | Treino Progressivo |
+| **Versão do contrato** | 1.1 |
+| **Última atualização** | 2026-09-24 |
 | **URL base (desenvolvimento)** | `http://localhost:3000` |
 | **Formato** | JSON (`Content-Type: application/json`) |
 
 > **Nota para o app mobile:** `localhost` dentro do emulador Android aponta para o próprio emulador, não para a máquina do desenvolvedor. Use `http://10.0.2.2:3000` no emulador Android, ou o IP da máquina na rede local para dispositivo físico. Registre a URL usada por cada ambiente na configuração do app, nunca fixa no meio do código.
+
+**Nota sobre o modelo de dados:** o `schema.prisma` atual tem `Aluno` e `Personal` como tabelas sem campo de senha. Para o login (RF-001) funcionar, cada uma precisa ganhar `email` (já existe em `Aluno`, falta em `Personal`) e `senha` (hash), além de um campo que identifique o perfil na resposta do login. Esse ajuste de schema é pré-requisito da Etapa 2 e não muda nada neste contrato — é o mesmo formato de resposta descrito na seção 2.
 
 ---
 
@@ -35,8 +37,8 @@ A régua de qualidade é esta: na entrega final, o contrato precisa ser suficien
 
 ### 1.1 Nomenclatura
 
-- Recursos no plural e em português, sem acento: `/chamados`, `/inspecoes`, `/fichas`
-- Campos em `camelCase`, sem acento: `dataAbertura`, `situacao`, `indiceConformidade`
+- Recursos no plural e em português, sem acento: `/exercicios`, `/fichas`, `/alunos`, `/sessoes-treino`
+- Campos em `camelCase`, sem acento: `cargaSugerida`, `repeticoesFeitas`, `grupoMuscular`
 - Identificadores técnicos em inglês: `id`, `createdAt`, `updatedAt`, `page`, `limit`
 
 ### 1.2 Métodos e status esperados
@@ -49,7 +51,7 @@ A régua de qualidade é esta: na entrega final, o contrato precisa ser suficien
 | Atualizar | `PATCH /recursos/:id` | `200` | `400`, `401`, `404` |
 | Remover | `DELETE /recursos/:id` | `204` | `401`, `404`, `409` |
 
-> Ajuste conforme o domínio. Operações de transição de estado costumam ficar melhor como sub-recurso (`POST /chamados/:id/resolucao`) do que como campo em um `PATCH` genérico — decida e registre a escolha.
+Operações que não são CRUD puro — registrar uma série executada, finalizar uma sessão e recalcular carga — ficam como sub-recurso (`POST /sessoes-treino/:id/finalizar`) em vez de campo em um `PATCH` genérico. Ver seção 4.
 
 ### 1.3 Formato de erro
 
@@ -58,16 +60,14 @@ Toda resposta de erro segue o mesmo formato, em qualquer endpoint:
 ```json
 {
   "statusCode": 400,
-  "message": ["titulo nao pode ser vazio", "categoriaId deve ser um uuid"],
+  "message": ["cargaUsada deve ser um numero positivo", "exercicioId deve ser um uuid"],
   "error": "Bad Request"
 }
 ```
 
-> Este é o formato padrão do NestJS. Se o grupo adotar um formato próprio, descreva-o aqui — e implemente-o com um filtro de exceção, não repetindo a estrutura em cada controller.
+Formato padrão do NestJS (`ValidationPipe` + filtro de exceção global).
 
 ### 1.4 Paginação
-
-> Descreva a estratégia adotada nas listagens. Exemplo:
 
 `GET /recursos?page=1&limit=20`
 
@@ -90,7 +90,7 @@ Todas as datas trafegam em ISO 8601, em UTC: `2026-08-13T14:30:00.000Z`. A conve
 
 ### 2.1 Estratégia
 
-> Descreva o fluxo: como o token é obtido, quanto tempo dura, se existe refresh, como é enviado.
+Login com e-mail e senha contra a API. O servidor devolve um token JWT com validade de 8 horas, contendo `sub` (id do usuário) e `perfil` (`personal` ou `aluno`). Não há refresh token no MVP — expirado, o usuário faz login novamente.
 
 Requisições autenticadas enviam o token no cabeçalho:
 
@@ -108,7 +108,7 @@ Autentica o usuário e devolve o token de acesso.
 
 ```json
 {
-  "email": "usuario@exemplo.com",
+  "email": "personal@exemplo.com",
   "senha": "..."
 }
 ```
@@ -119,9 +119,9 @@ Autentica o usuário e devolve o token de acesso.
 {
   "accessToken": "eyJhbGciOi...",
   "usuario": {
-    "id": "uuid",
-    "nome": "Nome do Usuario",
-    "perfil": "atendente"
+    "id": "9f1c2b6e-4a7d-4b28-9a4e-2d5f8c1e7b30",
+    "nome": "Fernanda Reis",
+    "perfil": "personal"
   }
 }
 ```
@@ -130,54 +130,44 @@ Autentica o usuário e devolve o token de acesso.
 
 | Status | Quando |
 |---|---|
-| `400` | Corpo inválido |
+| `400` | Corpo inválido (e-mail ausente, formato incorreto) |
 | `401` | Credenciais incorretas |
 
-#### `POST /auth/registro`
-
-> Descreva, se houver auto-cadastro. Caso contrário, remova e explique como os usuários são criados.
+Não há auto-cadastro. Um `personal` é criado por seed inicial do banco; cada `personal` cadastra seus próprios alunos via `POST /alunos` (seção 3.3), que recebem uma senha provisória definida pelo personal.
 
 ### 2.3 Perfis e permissões
 
-> Liste os perfis do sistema e o que cada um pode fazer. Esta tabela é o que o guard de autorização implementa.
-
 | Perfil | Pode | Não pode |
 |---|---|---|
-| | | |
-| | | |
+| `personal` | Cadastrar, editar e remover exercícios do catálogo; cadastrar alunos; montar e editar fichas para seus alunos; ver sessões e evolução de qualquer aluno seu | Registrar série executada ou finalizar sessão em nome do aluno |
+| `aluno` | Consultar a própria ficha; iniciar sessão de treino; registrar série executada; finalizar a própria sessão; ver a própria evolução por exercício | Ver dados de outro aluno; criar, editar ou remover exercícios ou fichas; cadastrar alunos |
 
 ### 2.4 Armazenamento do token em cada cliente
 
 | Cliente | Onde o token fica | Nível de autenticação | Observação |
 |---|---|---|---|
-| Web (Next.js) | | completa | |
-| Mobile (Flutter) | | _(completa / simplificada / simulada — conforme declarado no PRD)_ | |
+| Web (Next.js) | Cookie `httpOnly` gerenciado pelo servidor Next (Route Handler) | Completa | Expiração tratada; logout limpa o cookie |
+| Mobile (Flutter) | Memória (variável de estado do app) | Simplificada — a confirmar no PRD | Login real contra `/auth/login`; token perdido ao fechar o app, sem refresh |
 
-> **Regra inegociável:** sessão simplificada ou simulada no app mobile nunca significa afrouxar a API. Os endpoints continuam protegidos pelo mesmo guard, e o app continua apresentando um token válido em toda requisição autenticada — o que muda é apenas **como** esse token é obtido, não se ele é exigido. Criar uma rota desprotegida só para o app funcionar sem login é falha de segurança, não simplificação aceitável.
+> **Regra inegociável:** sessão simplificada ou simulada no app mobile nunca significa afrouxar a API. Os endpoints continuam protegidos pelo mesmo guard, e o app continua apresentando um token válido em toda requisição autenticada — o que muda é apenas **como** esse token é obtido, não se ele é exigido.
 
 ---
 
 ## 3. Recursos
 
-> Repita o bloco abaixo para cada recurso do domínio. Documente **todos** os endpoints do MVP; endpoints de prioridade Média ou Baixa podem ficar como esboço, desde que marcados como tal.
->
-> **Antes de preencher, leia o [Anexo A](#anexo-a--exemplo-preenchido-domínio-de-biblioteca)**, no final deste documento: ele traz o mesmo bloco preenchido de ponta a ponta, com um recurso simples e um endpoint de regra de negócio.
+### 3.1 `Exercicio`
 
----
+**Descrição:** item do catálogo de exercícios mantido pelo personal, usado para montar itens de ficha.
 
-### 3.1 `<Recurso>`
-
-**Descrição:** _(o que este recurso representa no domínio)_
-
-**Consumido por:** _(web / mobile / ambos)_
+**Consumido por:** web (cadastro do catálogo) e mobile (consulta, ao exibir a ficha e o histórico)
 
 #### Representação
 
 ```json
 {
-  "id": "uuid",
-  "campoDominio": "string",
-  "situacao": "aberto",
+  "id": "a1b2c3d4-0000-0000-0000-000000000001",
+  "nome": "Supino reto com barra",
+  "grupoMuscular": "peito",
   "createdAt": "2026-08-13T14:30:00.000Z",
   "updatedAt": "2026-08-13T14:30:00.000Z"
 }
@@ -186,238 +176,480 @@ Autentica o usuário e devolve o token de acesso.
 | Campo | Tipo | Obrigatório | Observação |
 |---|---|---|---|
 | `id` | uuid | — | Gerado pelo servidor |
-| | | | |
+| `nome` | string (1–120) | sim | |
+| `grupoMuscular` | string | sim | Ex.: `peito`, `costas`, `pernas`, `ombro`, `braco`, `core` |
 
-#### `GET /<recursos>`
+#### `GET /exercicios`
 
-Lista os registros.
+Lista o catálogo. Rota autenticada — qualquer perfil.
 
 | Parâmetro de consulta | Tipo | Descrição |
 |---|---|---|
 | `page` | número | Página, padrão 1 |
-| `limit` | número | Itens por página, padrão 20 |
-| | | |
+| `limit` | número | Itens por página, padrão 20, máximo 100 |
+| `grupoMuscular` | string | Filtra por grupo muscular |
 
 **Resposta `200`** — objeto paginado conforme a seção 1.4.
 
-#### `GET /<recursos>/:id`
+#### `GET /exercicios/:id`
 
 **Resposta `200`** — a representação acima.
-**Resposta `404`** — registro inexistente.
 
-#### `POST /<recursos>`
+| Status | Quando |
+|---|---|
+| `404` | Não existe exercício com esse `id` |
+
+#### `POST /exercicios`
+
+Cadastra um exercício. Rota autenticada — **somente perfil `personal`**.
 
 **Requisição**
 
 ```json
 {
-  "campoDominio": "string"
+  "nome": "Supino reto com barra",
+  "grupoMuscular": "peito"
 }
 ```
 
 **Resposta `201`** — a representação criada.
 
-**Regras de validação**
-
-| Campo | Regra |
+| Status | Quando |
 |---|---|
-| | |
+| `400` | Campo obrigatório ausente |
+| `403` | Perfil `aluno` tentando cadastrar |
 
-#### `PATCH /<recursos>/:id`
+#### `PATCH /exercicios/:id`
 
 **Requisição** — campos parciais da representação.
 **Resposta `200`** — a representação atualizada.
 
-#### `DELETE /<recursos>/:id`
+| Status | Quando |
+|---|---|
+| `403` | Perfil `aluno` |
+| `404` | Exercício inexistente |
+
+#### `DELETE /exercicios/:id`
 
 **Resposta `204`** — sem corpo.
-**Resposta `409`** — quando existe dependência que impede a remoção. _(descreva a regra)_
-
----
-
-## 4. Endpoints de regra de negócio
-
-> Nem tudo é CRUD. Documente aqui os endpoints que executam a lógica própria do domínio — cálculo, transição de estado, geração. São eles que dão substância ao sistema.
-
-### 4.1 `POST /<recurso>/:id/<acao>`
-
-**O que faz:** _(descreva a regra executada)_
-
-**Pré-condições:** _(estado necessário para a ação ser válida)_
-
-**Requisição**
-
-```json
-{}
-```
-
-**Resposta `200`**
-
-```json
-{}
-```
-
-**Erros específicos**
 
 | Status | Quando |
 |---|---|
-| `409` | _(ação incompatível com o estado atual do recurso)_ |
+| `403` | Perfil `aluno` |
+| `404` | Exercício inexistente |
+| `409` | Exercício está em uso em algum item de ficha — remova o item antes |
 
 ---
 
-## 5. Diferenças de consumo entre os clientes
+### 3.2 `Personal`
 
-> Se algum endpoint aceita parâmetros pensados para um cliente específico — um formato reduzido para a lista do mobile, por exemplo — registre aqui. O objetivo é deixar explícito que a API é uma só, com variações declaradas.
+**Descrição:** profissional responsável por cadastrar exercícios, criar fichas e acompanhar a evolução dos alunos.
 
-| Endpoint | Diferença | Cliente | Motivo |
-|---|---|---|---|
-| | | | |
-
----
-
-## 6. Como verificar o contrato
-
-> Registre como o grupo confere que a API implementada corresponde a este documento.
-
-- [ ] Coleção de requisições versionada no repositório _(arquivo `.http`, Insomnia, Postman)_
-- [ ] Swagger habilitado no backend _(`@nestjs/swagger`)_ — URL: `http://localhost:3000/api`
-- [ ] Tipos do cliente web derivados do contrato, em `web/src/types/`
-- [ ] Modelos do mobile derivados do contrato, em `mobile/lib/models/`
-
-> Se o grupo habilitar o Swagger, este documento continua sendo necessário: o Swagger descreve a API que **existe**, e o contrato descreve a que foi **acordada**. Os dois convergem na entrega final, mas cumprem papéis diferentes durante o projeto.
-
----
-
-## 7. Histórico de revisões
-
-> Toda mudança de endpoint entra aqui, com a data e quem foi avisado. É este histórico que explica, depois, por que um cliente parou de funcionar.
-
-| Versão | Data | Alteração | Impacto nos clientes |
-|---|---|---|---|
-| 1.0 | | Versão inicial | — |
-| | | | |
-
-
----
-
-## Anexo A — exemplo preenchido (domínio de biblioteca)
-
-> Este anexo existe para mostrar **a forma**, não o conteúdo. Ele usa o domínio de biblioteca justamente porque ele é o das aulas práticas e **não pode ser o tema do trabalho** — não há como copiar daqui para o seu projeto, só como se orientar pelo nível de detalhe.
->
-> Repare no que faz este exemplo funcionar: todo campo tem tipo, toda operação tem os códigos de status que devolve, e as regras que impedem uma operação estão escritas como resposta de erro, não como texto solto. É esse nível que permite alguém implementar o cliente sem perguntar nada.
->
-> Apague este anexo do seu contrato depois de preencher o documento.
-
-### A.1 `Livro`
-
-**Descrição:** obra disponível no acervo. Um livro pode ter vários exemplares emprestados ao longo do tempo, mas só um empréstimo ativo por vez.
-
-**Consumido por:** web (cadastro e acervo completo) e mobile (busca e consulta)
+**Consumido por:** web (perfil autenticado, exibido no cabeçalho da aplicação)
 
 #### Representação
 
 ```json
 {
-  "id": "9f1c2b6e-4a7d-4b28-9a4e-2d5f8c1e7b30",
-  "titulo": "Dom Casmurro",
-  "autor": "Machado de Assis",
-  "isbn": "9788525406958",
-  "anoPublicacao": 1899,
-  "situacao": "disponivel",
-  "createdAt": "2026-03-10T13:02:41.000Z",
-  "updatedAt": "2026-03-10T13:02:41.000Z"
+  "id": "b2c3d4e5-0000-0000-0000-000000000002",
+  "nome": "Fernanda Reis",
+  "email": "fernanda@exemplo.com"
+}
+```
+
+Não há endpoint de CRUD público para `Personal` no MVP — a conta é provisionada por seed do banco. `GET /auth/login` é o único ponto de contato deste recurso no contrato.
+
+---
+
+### 3.3 `Aluno`
+
+**Descrição:** pessoa que treina, dona das fichas e sessões. Cadastrada pelo personal.
+
+**Consumido por:** web (personal gerencia a lista) e mobile (o próprio aluno consulta e edita seus dados)
+
+#### Representação
+
+```json
+{
+  "id": "c3d4e5f6-0000-0000-0000-000000000003",
+  "nome": "Marcos Vinicius",
+  "email": "marcos@exemplo.com",
+  "createdAt": "2026-08-13T14:30:00.000Z",
+  "updatedAt": "2026-08-13T14:30:00.000Z"
 }
 ```
 
 | Campo | Tipo | Obrigatório na criação | Observação |
 |---|---|---|---|
 | `id` | uuid | — | Gerado pelo servidor |
-| `titulo` | string (1–200) | sim | |
-| `autor` | string (1–120) | sim | |
-| `isbn` | string (13) | sim | Único no acervo |
-| `anoPublicacao` | número inteiro | não | Entre 1450 e o ano corrente |
-| `situacao` | enum | — | `disponivel` \| `emprestado`; calculada pelo servidor, nunca enviada pelo cliente |
-| `createdAt`, `updatedAt` | ISO 8601 | — | Gerados pelo servidor |
+| `nome` | string (1–120) | sim | |
+| `email` | string | sim | Único no sistema |
+| `senha` | string | sim (só na criação) | Nunca retornada nas respostas; senha provisória definida pelo personal |
 
-#### `GET /livros`
+#### `GET /alunos`
 
-Lista o acervo. Rota autenticada — qualquer perfil.
+Lista os alunos do personal autenticado. Rota autenticada — **somente perfil `personal`**.
 
 | Parâmetro de consulta | Tipo | Descrição |
 |---|---|---|
 | `page` | número | Página, padrão 1 |
-| `limit` | número | Itens por página, padrão 20, máximo 100 |
-| `busca` | string | Filtra por título ou autor, sem diferenciar maiúsculas |
-| `situacao` | enum | `disponivel` ou `emprestado` |
+| `limit` | número | Itens por página, padrão 20 |
+| `busca` | string | Filtra por nome ou e-mail |
 
-**Resposta `200`**
-
-```json
-{
-  "dados": [ { "id": "...", "titulo": "Dom Casmurro", "autor": "Machado de Assis", "isbn": "9788525406958", "anoPublicacao": 1899, "situacao": "disponivel", "createdAt": "...", "updatedAt": "..." } ],
-  "total": 143,
-  "page": 1,
-  "limit": 20
-}
-```
+**Resposta `200`** — objeto paginado conforme a seção 1.4.
 
 | Status | Quando |
 |---|---|
-| `200` | Sucesso, mesmo que a lista venha vazia |
-| `401` | Token ausente ou inválido |
+| `403` | Perfil `aluno` |
 
-#### `GET /livros/:id`
+#### `GET /alunos/:id`
 
-**Resposta `200`** — a representação acima.
+Um `personal` só vê os próprios alunos; um `aluno` só vê a si mesmo.
+
+**Resposta `200`** — a representação acima, sem o campo `senha`.
 
 | Status | Quando |
 |---|---|
-| `404` | Não existe livro com esse `id` |
+| `403` | `personal` consultando aluno de outro personal, ou `aluno` consultando outro `id` |
+| `404` | Aluno inexistente |
 
-#### `POST /livros`
+#### `POST /alunos`
 
-Cadastra um livro. Rota autenticada — **somente perfil `bibliotecario`**.
+Cadastra um aluno vinculado ao personal autenticado. Rota autenticada — **somente perfil `personal`**.
 
 **Requisição**
 
 ```json
 {
-  "titulo": "Memórias Póstumas de Brás Cubas",
-  "autor": "Machado de Assis",
-  "isbn": "9788535911503",
-  "anoPublicacao": 1881
+  "nome": "Marcos Vinicius",
+  "email": "marcos@exemplo.com",
+  "senha": "senha-provisoria-123"
 }
 ```
 
-**Resposta `201`** — a representação criada, com `situacao` em `disponivel`.
+**Resposta `201`** — a representação criada, sem o campo `senha`.
 
 | Status | Quando |
 |---|---|
-| `400` | Campo obrigatório ausente, ISBN fora do formato, ano fora da faixa |
-| `403` | Perfil `leitor` tentando cadastrar |
-| `409` | Já existe livro com esse ISBN |
+| `400` | Campo obrigatório ausente ou e-mail em formato inválido |
+| `403` | Perfil `aluno` tentando cadastrar |
+| `409` | Já existe usuário com esse e-mail |
 
-#### `DELETE /livros/:id`
+#### `PATCH /alunos/:id`
+
+**Requisição** — campos parciais (`nome`, `email`; `senha` apenas se o próprio aluno estiver trocando a sua).
+**Resposta `200`** — a representação atualizada.
+
+| Status | Quando |
+|---|---|
+| `403` | Tentativa de editar aluno de outro personal, ou aluno editando outro `id` |
+| `404` | Aluno inexistente |
+
+#### `DELETE /alunos/:id`
+
+Remove um aluno cadastrado pelo personal autenticado. Rota autenticada — **somente perfil `personal`**, dono do aluno.
 
 **Resposta `204`** — sem corpo.
 
 | Status | Quando |
 |---|---|
-| `403` | Perfil `leitor` |
-| `404` | Livro inexistente |
-| `409` | Livro com empréstimo ativo — devolva antes de remover |
+| `403` | Perfil `aluno`, ou aluno de outro personal |
+| `404` | Aluno inexistente |
+| `409` | Aluno tem ficha cadastrada — histórico não pode ser perdido |
 
 ---
 
-### A.2 Endpoint de regra de negócio — devolução
+### 3.4 `Ficha`
 
-> Este é o tipo de endpoint que sustenta o "lógica além do CRUD". Repare que ele **não** é um `PATCH` genérico: a devolução é uma operação do domínio, com pré-condições próprias, e por isso vira um sub-recurso.
+**Descrição:** conjunto de exercícios prescritos pelo personal a um aluno, com meta de séries, repetições e carga por exercício.
 
-#### `POST /emprestimos/:id/devolucao`
+**Consumido por:** web (montagem e edição pelo personal) e mobile (consulta pelo aluno, para saber o treino do dia)
 
-**O que faz:** encerra um empréstimo ativo, devolve o livro ao acervo e calcula a multa por atraso.
+#### Representação
 
-**Pré-condições:** o empréstimo existe e está com `situacao` em `ativo`.
+```json
+{
+  "id": "d4e5f6a7-0000-0000-0000-000000000004",
+  "alunoId": "c3d4e5f6-0000-0000-0000-000000000003",
+  "personalId": "b2c3d4e5-0000-0000-0000-000000000002",
+  "itens": [
+    {
+      "id": "e5f6a7b8-0000-0000-0000-000000000005",
+      "exercicioId": "a1b2c3d4-0000-0000-0000-000000000001",
+      "exercicio": { "id": "a1b2c3d4-0000-0000-0000-000000000001", "nome": "Supino reto com barra", "grupoMuscular": "peito" },
+      "ordem": 1,
+      "seriesAlvo": 4,
+      "repeticoesAlvo": 10,
+      "cargaSugerida": 40.0
+    }
+  ],
+  "createdAt": "2026-08-13T14:30:00.000Z",
+  "updatedAt": "2026-08-13T14:30:00.000Z"
+}
+```
+
+| Campo | Tipo | Obrigatório | Observação |
+|---|---|---|---|
+| `id` | uuid | — | Gerado pelo servidor |
+| `alunoId` | uuid | sim | Deve ser um aluno do personal autenticado |
+| `personalId` | uuid | — | Preenchido pelo servidor a partir do token |
+| `itens` | array de `ItemFicha` | não, na criação | Pode ser enviado junto ou adicionado depois via sub-recurso (seção 3.5) |
+
+#### `GET /fichas`
+
+Lista fichas. `personal` filtra pelos seus alunos; `aluno` vê apenas as próprias, sem precisar informar `alunoId`.
+
+| Parâmetro de consulta | Tipo | Descrição |
+|---|---|---|
+| `page` | número | Página, padrão 1 |
+| `limit` | número | Itens por página, padrão 20 |
+| `alunoId` | uuid | Filtra por aluno — ignorado se o token for de um `aluno` (usa sempre o próprio id) |
+
+**Resposta `200`** — objeto paginado conforme a seção 1.4, com `itens` de cada ficha.
+
+#### `GET /fichas/:id`
+
+**Resposta `200`** — a representação acima.
+
+| Status | Quando |
+|---|---|
+| `403` | `aluno` tentando ver ficha de outro aluno |
+| `404` | Ficha inexistente |
+
+#### `POST /fichas`
+
+Cria uma ficha para um aluno do personal autenticado. Rota autenticada — **somente perfil `personal`**.
+
+**Requisição**
+
+```json
+{
+  "alunoId": "c3d4e5f6-0000-0000-0000-000000000003",
+  "itens": [
+    { "exercicioId": "a1b2c3d4-0000-0000-0000-000000000001", "ordem": 1, "seriesAlvo": 4, "repeticoesAlvo": 10, "cargaSugerida": 40.0 }
+  ]
+}
+```
+
+**Resposta `201`** — a representação criada.
+
+| Campo | Regra |
+|---|---|
+| `alunoId` | Deve existir e pertencer ao personal autenticado |
+| `itens[].exercicioId` | Deve existir no catálogo |
+| `itens[].cargaSugerida` | Número maior ou igual a zero |
+
+| Status | Quando |
+|---|---|
+| `400` | Campo obrigatório ausente, `alunoId` ou `exercicioId` inexistente |
+| `403` | Perfil `aluno`, ou `alunoId` não pertence ao personal autenticado |
+
+#### `PATCH /fichas/:id`
+
+Atualiza dados da ficha (não os itens — ver seção 3.5). Rota autenticada — **somente perfil `personal`**, dono da ficha.
+
+**Resposta `200`** — a representação atualizada.
+
+#### `DELETE /fichas/:id`
+
+**Resposta `204`** — sem corpo.
+
+| Status | Quando |
+|---|---|
+| `403` | Perfil `aluno`, ou ficha de outro personal |
+| `404` | Ficha inexistente |
+| `409` | Ficha tem sessão de treino registrada — histórico não pode ser perdido |
+
+---
+
+### 3.5 `ItemFicha` (sub-recurso de `Ficha`)
+
+**Descrição:** um exercício dentro de uma ficha, com a meta de séries/repetições e a carga sugerida para a próxima execução.
+
+**Consumido por:** web (montagem pelo personal) e mobile (leitura, ao exibir o treino do dia)
+
+#### Representação
+
+Ver bloco `itens` dentro de `Ficha`, seção 3.4.
+
+#### `POST /fichas/:fichaId/itens`
+
+Adiciona um exercício à ficha. Rota autenticada — **somente perfil `personal`**, dono da ficha.
+
+**Requisição**
+
+```json
+{
+  "exercicioId": "a1b2c3d4-0000-0000-0000-000000000001",
+  "ordem": 2,
+  "seriesAlvo": 3,
+  "repeticoesAlvo": 12,
+  "cargaSugerida": 20.0
+}
+```
+
+**Resposta `201`** — o item criado.
+
+| Status | Quando |
+|---|---|
+| `400` | Campo obrigatório ausente |
+| `403` | Ficha de outro personal |
+| `404` | `fichaId` ou `exercicioId` inexistente |
+
+#### `PATCH /itens-ficha/:id`
+
+Ajusta meta de séries, repetições, ordem ou carga sugerida manualmente. Rota autenticada — **somente perfil `personal`**, dono da ficha do item.
+
+**Resposta `200`** — o item atualizado.
+
+#### `DELETE /itens-ficha/:id`
+
+**Resposta `204`** — sem corpo.
+
+| Status | Quando |
+|---|---|
+| `403` | Item de ficha de outro personal |
+| `404` | Item inexistente |
+| `409` | Item já tem série executada registrada em alguma sessão |
+
+---
+
+### 3.6 `SessaoTreino`
+
+**Descrição:** uma execução do treino pelo aluno, em uma data, baseada em uma ficha. Reúne as séries executadas.
+
+**Consumido por:** mobile (o aluno inicia, executa e finaliza) e web (o personal acompanha, em modo leitura)
+
+#### Representação
+
+```json
+{
+  "id": "f6a7b8c9-0000-0000-0000-000000000006",
+  "alunoId": "c3d4e5f6-0000-0000-0000-000000000003",
+  "fichaId": "d4e5f6a7-0000-0000-0000-000000000004",
+  "data": "2026-09-10T13:00:00.000Z",
+  "situacao": "em_andamento",
+  "seriesExecutadas": [
+    {
+      "id": "a7b8c9d0-0000-0000-0000-000000000007",
+      "itemFichaId": "e5f6a7b8-0000-0000-0000-000000000005",
+      "numeroSerie": 1,
+      "cargaUsada": 40.0,
+      "repeticoesFeitas": 10
+    }
+  ]
+}
+```
+
+| Campo | Tipo | Obrigatório | Observação |
+|---|---|---|---|
+| `id` | uuid | — | Gerado pelo servidor |
+| `alunoId` | uuid | — | Preenchido pelo servidor a partir do token |
+| `fichaId` | uuid | sim, na criação | Deve pertencer ao aluno autenticado |
+| `data` | ISO 8601 | — | Preenchida pelo servidor no momento da criação |
+| `situacao` | enum | — | `em_andamento` \| `finalizada`; calculada pelo servidor |
+| `seriesExecutadas` | array | — | Preenchido conforme o aluno registra séries |
+
+#### `POST /sessoes-treino`
+
+Inicia uma sessão de treino. Rota autenticada — **somente perfil `aluno`**.
+
+**Requisição**
+
+```json
+{
+  "fichaId": "d4e5f6a7-0000-0000-0000-000000000004"
+}
+```
+
+**Resposta `201`** — a representação criada, com `situacao: "em_andamento"` e `seriesExecutadas: []`.
+
+| Status | Quando |
+|---|---|
+| `400` | `fichaId` ausente |
+| `403` | Ficha não pertence ao aluno autenticado |
+| `404` | Ficha inexistente |
+| `409` | Já existe uma sessão `em_andamento` para essa ficha |
+
+#### `GET /sessoes-treino`
+
+`aluno` vê as próprias; `personal` filtra por `alunoId` para acompanhar.
+
+| Parâmetro de consulta | Tipo | Descrição |
+|---|---|---|
+| `page` | número | Página, padrão 1 |
+| `limit` | número | Itens por página, padrão 20 |
+| `alunoId` | uuid | Ignorado se o token for de um `aluno` |
+| `fichaId` | uuid | Filtra por ficha |
+
+**Resposta `200`** — objeto paginado conforme a seção 1.4.
+
+#### `GET /sessoes-treino/:id`
+
+**Resposta `200`** — a representação acima, com `seriesExecutadas`.
+
+| Status | Quando |
+|---|---|
+| `403` | `aluno` consultando sessão de outro aluno |
+| `404` | Sessão inexistente |
+
+---
+
+## 4. Endpoints de regra de negócio
+
+### 4.1 `POST /sessoes-treino/:id/series`
+
+**O que faz:** registra uma série executada dentro de uma sessão em andamento.
+
+**Pré-condições:** a sessão existe, pertence ao aluno autenticado e está com `situacao` em `em_andamento`. O `itemFichaId` informado pertence à ficha da sessão.
+
+**Requisição**
+
+```json
+{
+  "itemFichaId": "e5f6a7b8-0000-0000-0000-000000000005",
+  "numeroSerie": 1,
+  "cargaUsada": 40.0,
+  "repeticoesFeitas": 10
+}
+```
+
+**Resposta `201`**
+
+```json
+{
+  "id": "a7b8c9d0-0000-0000-0000-000000000007",
+  "sessaoTreinoId": "f6a7b8c9-0000-0000-0000-000000000006",
+  "itemFichaId": "e5f6a7b8-0000-0000-0000-000000000005",
+  "numeroSerie": 1,
+  "cargaUsada": 40.0,
+  "repeticoesFeitas": 10
+}
+```
+
+**Erros específicos**
+
+| Status | Quando |
+|---|---|
+| `400` | Campo obrigatório ausente, `cargaUsada` ou `repeticoesFeitas` negativos |
+| `403` | Sessão de outro aluno |
+| `404` | Sessão ou `itemFichaId` inexistente |
+| `409` | Sessão já está `finalizada`, ou `itemFichaId` não pertence à ficha da sessão |
+
+---
+
+### 4.2 `POST /sessoes-treino/:id/finalizar`
+
+**O que faz:** encerra a sessão e recalcula, para cada item da ficha com série registrada nesta sessão, a `cargaSugerida` a ser usada na próxima vez — é aqui que a sobrecarga progressiva acontece.
+
+**Regra do cálculo:** para cada `itemFicha` da sessão, compara `repeticoesFeitas` em todas as séries registradas contra `repeticoesAlvo`:
+- Se o aluno completou `repeticoesAlvo` (ou mais) em **todas** as séries do item, a `cargaSugerida` do item aumenta em 5% em relação à `cargaUsada` da última série.
+- Se completou em parte das séries, a `cargaSugerida` mantém o mesmo valor.
+- Se ficou abaixo de `repeticoesAlvo` em mais de uma série, a `cargaSugerida` reduz em 5%.
+
+**O cálculo é feito no servidor** — o cliente exibe o valor recebido, nunca o recalcula.
+
+**Pré-condições:** a sessão existe, pertence ao aluno autenticado, está `em_andamento` e tem ao menos uma série registrada.
 
 **Requisição:** sem corpo.
 
@@ -425,32 +657,83 @@ Cadastra um livro. Rota autenticada — **somente perfil `bibliotecario`**.
 
 ```json
 {
-  "id": "3c8a1f04-77b2-4c19-8e55-a1d9b6f2c084",
-  "livroId": "9f1c2b6e-4a7d-4b28-9a4e-2d5f8c1e7b30",
-  "dataEmprestimo": "2026-03-01T14:00:00.000Z",
-  "dataPrevistaDevolucao": "2026-03-15T14:00:00.000Z",
-  "dataDevolucao": "2026-03-18T09:12:00.000Z",
-  "diasAtraso": 3,
-  "multa": 4.5,
-  "situacao": "devolvido"
+  "id": "f6a7b8c9-0000-0000-0000-000000000006",
+  "situacao": "finalizada",
+  "itensAtualizados": [
+    {
+      "itemFichaId": "e5f6a7b8-0000-0000-0000-000000000005",
+      "cargaAnterior": 40.0,
+      "cargaSugeridaNova": 42.0
+    }
+  ]
 }
 ```
 
+**Erros específicos**
+
 | Status | Quando |
 |---|---|
-| `401` | Token ausente ou inválido |
-| `404` | Não existe empréstimo com esse `id` |
-| `409` | O empréstimo já foi devolvido |
-
-**Regra do cálculo:** `multa = diasAtraso × 1,50`, com `diasAtraso` contado em dias corridos a partir de `dataPrevistaDevolucao`. Sem atraso, `diasAtraso` é `0` e `multa` é `0`. **O cálculo é feito no servidor** — o cliente exibe o valor que recebe, nunca o recalcula.
+| `403` | Sessão de outro aluno |
+| `404` | Sessão inexistente |
+| `409` | Sessão já está `finalizada`, ou não tem nenhuma série registrada |
 
 ---
 
-### A.3 Perfis e permissões do exemplo
+### 4.3 `GET /alunos/:alunoId/exercicios/:exercicioId/evolucao`
 
-| Perfil | Pode | Não pode |
-|---|---|---|
-| `bibliotecario` | Cadastrar, editar e remover livros; registrar empréstimos e devoluções de qualquer leitor | — |
-| `leitor` | Consultar o acervo; ver e devolver os próprios empréstimos | Cadastrar livros; ver empréstimos de outros leitores |
+**O que faz:** devolve a série histórica de carga usada pelo aluno naquele exercício, ordenada por data — base do gráfico de evolução no web.
 
-> A coluna "Não pode" não é decorativa: cada linha dela vira um teste de `403` e um caso no guard de autorização.
+**Pré-condições:** `personal` só consulta alunos próprios; `aluno` só consulta a si mesmo.
+
+**Resposta `200`**
+
+```json
+{
+  "exercicioId": "a1b2c3d4-0000-0000-0000-000000000001",
+  "exercicio": "Supino reto com barra",
+  "pontos": [
+    { "data": "2026-08-20T13:00:00.000Z", "cargaMaxima": 38.0 },
+    { "data": "2026-08-27T13:00:00.000Z", "cargaMaxima": 40.0 },
+    { "data": "2026-09-03T13:00:00.000Z", "cargaMaxima": 42.0 }
+  ]
+}
+```
+
+`cargaMaxima` é a maior `cargaUsada` registrada entre as séries daquele exercício, na sessão daquela data.
+
+**Erros específicos**
+
+| Status | Quando |
+|---|---|
+| `403` | `aluno` consultando outro `alunoId`, ou `personal` consultando aluno que não é seu |
+| `404` | Aluno ou exercício inexistente, ou nenhuma sessão finalizada envolvendo esse exercício |
+
+---
+
+## 5. Diferenças de consumo entre os clientes
+
+| Endpoint | Diferença | Cliente | Motivo |
+|---|---|---|---|
+| `GET /fichas` | `alunoId` é ignorado e resolvido pelo próprio token | Mobile | O aluno nunca precisa saber ou informar seu próprio id |
+| `GET /sessoes-treino/:id` | Devolve `seriesExecutadas` embutidas na mesma resposta, em vez de endpoint separado | Mobile | Evita múltiplas chamadas durante o treino, quando a conectividade pode ser instável |
+| `GET /alunos/:alunoId/exercicios/:exercicioId/evolucao` | Consumido para montar gráfico de série temporal | Web | O mobile não exibe gráfico de evolução no recorte mínimo do MVP |
+
+---
+
+## 6. Como verificar o contrato
+
+- [ ] Coleção de requisições versionada no repositório (arquivo `.http`, Insomnia ou Postman)
+- [ ] Swagger habilitado no backend (`@nestjs/swagger`) — URL: `http://localhost:3000/api`
+- [ ] Tipos do cliente web derivados do contrato, em `web/src/types/`
+- [ ] Modelos do mobile derivados do contrato, em `mobile/lib/models/`
+
+Se o grupo habilitar o Swagger, este documento continua sendo necessário: o Swagger descreve a API que **existe**, e o contrato descreve a que foi **acordada**. Os dois convergem na entrega final, mas cumprem papéis diferentes durante o projeto.
+
+---
+
+## 7. Histórico de revisões
+
+| Versão | Data | Alteração | Impacto nos clientes |
+|---|---|---|---|
+| 1.0 | 2026-09-12 | Versão inicial: autenticação, `Exercicio`, `Aluno`, `Personal`, `Ficha`, `ItemFicha`, `SessaoTreino` e regra de sobrecarga progressiva | — |
+| 1.1 | 2026-09-24 | Adiciona `DELETE /alunos/:id` (faltava no contrato original) | Web: personal passa a poder remover um aluno |

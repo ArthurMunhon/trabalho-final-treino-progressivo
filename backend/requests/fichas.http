@@ -1,0 +1,95 @@
+@baseUrl = http://localhost:3000
+### Substitua pelos ids reais do seu ambiente (nao ha endpoint de Personal ainda - RF pendente do AuthModule)
+@alunoId = 00000000-0000-0000-0000-000000000000
+@personalId = 00000000-0000-0000-0000-000000000000
+@exercicioId = 00000000-0000-0000-0000-000000000000
+
+### Criar ficha com um item embutido (201 esperado)
+POST {{baseUrl}}/fichas
+Content-Type: application/json
+
+{
+  "alunoId": "{{alunoId}}",
+  "personalId": "{{personalId}}",
+  "itens": [
+    { "exercicioId": "{{exercicioId}}", "ordem": 1, "seriesAlvo": 4, "repeticoesAlvo": 10, "cargaSugerida": 40 }
+  ]
+}
+
+> {%
+    client.global.set("fichaId", response.body.id);
+%}
+
+### Criar ficha com alunoId inexistente (400 esperado)
+POST {{baseUrl}}/fichas
+Content-Type: application/json
+
+{
+  "alunoId": "00000000-0000-0000-0000-000000000000",
+  "personalId": "{{personalId}}"
+}
+
+### Listar fichas (paginado)
+GET {{baseUrl}}/fichas?page=1&limit=20
+
+### Listar fichas de um aluno
+GET {{baseUrl}}/fichas?alunoId={{alunoId}}
+
+### Obter ficha criada acima (com itens)
+GET {{baseUrl}}/fichas/{{fichaId}}
+
+### Obter ficha inexistente (404 esperado)
+GET {{baseUrl}}/fichas/00000000-0000-0000-0000-000000000000
+
+### Adicionar item a ficha criada acima (201 esperado)
+POST {{baseUrl}}/fichas/{{fichaId}}/itens
+Content-Type: application/json
+
+{
+  "exercicioId": "{{exercicioId}}",
+  "ordem": 2,
+  "seriesAlvo": 3,
+  "repeticoesAlvo": 12,
+  "cargaSugerida": 20
+}
+
+> {%
+    client.global.set("itemFichaId", response.body.id);
+%}
+
+### Adicionar item com fichaId inexistente (404 esperado)
+POST {{baseUrl}}/fichas/00000000-0000-0000-0000-000000000000/itens
+Content-Type: application/json
+
+{
+  "exercicioId": "{{exercicioId}}",
+  "ordem": 1,
+  "seriesAlvo": 1,
+  "repeticoesAlvo": 1,
+  "cargaSugerida": 1
+}
+
+### Atualizar item criado acima (200 esperado)
+PATCH {{baseUrl}}/itens-ficha/{{itemFichaId}}
+Content-Type: application/json
+
+{
+  "cargaSugerida": 25
+}
+
+### Remover item criado acima (204 esperado)
+DELETE {{baseUrl}}/itens-ficha/{{itemFichaId}}
+
+### Atualizar ficha (reatribuir aluno, 200 esperado)
+PATCH {{baseUrl}}/fichas/{{fichaId}}
+Content-Type: application/json
+
+{
+  "alunoId": "{{alunoId}}"
+}
+
+### Remover ficha criada acima (204 esperado, sem sessao registrada)
+DELETE {{baseUrl}}/fichas/{{fichaId}}
+
+### Remover ficha inexistente (404 esperado)
+DELETE {{baseUrl}}/fichas/00000000-0000-0000-0000-000000000000

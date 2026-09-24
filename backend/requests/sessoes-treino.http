@@ -1,0 +1,75 @@
+@baseUrl = http://localhost:3000
+### Substitua pelos ids reais do seu ambiente
+@alunoId = 00000000-0000-0000-0000-000000000000
+@fichaId = 00000000-0000-0000-0000-000000000000
+@itemFichaId = 00000000-0000-0000-0000-000000000000
+
+### Iniciar sessao de treino (201 esperado)
+POST {{baseUrl}}/sessoes-treino
+Content-Type: application/json
+
+{
+  "fichaId": "{{fichaId}}",
+  "alunoId": "{{alunoId}}"
+}
+
+> {%
+    client.global.set("sessaoId", response.body.id);
+%}
+
+### Iniciar segunda sessao na mesma ficha (409 esperado, RN-002)
+POST {{baseUrl}}/sessoes-treino
+Content-Type: application/json
+
+{
+  "fichaId": "{{fichaId}}",
+  "alunoId": "{{alunoId}}"
+}
+
+### Listar sessoes (filtrando por aluno)
+GET {{baseUrl}}/sessoes-treino?alunoId={{alunoId}}
+
+### Obter sessao criada acima (com seriesExecutadas)
+GET {{baseUrl}}/sessoes-treino/{{sessaoId}}
+
+### Obter sessao inexistente (404 esperado)
+GET {{baseUrl}}/sessoes-treino/00000000-0000-0000-0000-000000000000
+
+### Registrar serie executada (201 esperado)
+POST {{baseUrl}}/sessoes-treino/{{sessaoId}}/series
+Content-Type: application/json
+
+{
+  "itemFichaId": "{{itemFichaId}}",
+  "numeroSerie": 1,
+  "cargaUsada": 40,
+  "repeticoesFeitas": 10
+}
+
+### Registrar serie invalida (400 esperado, repeticoesFeitas negativo)
+POST {{baseUrl}}/sessoes-treino/{{sessaoId}}/series
+Content-Type: application/json
+
+{
+  "itemFichaId": "{{itemFichaId}}",
+  "numeroSerie": 2,
+  "cargaUsada": 40,
+  "repeticoesFeitas": -1
+}
+
+### Finalizar sessao (200 esperado, recalcula cargaSugerida - RN-001)
+POST {{baseUrl}}/sessoes-treino/{{sessaoId}}/finalizar
+
+### Registrar serie apos finalizada (409 esperado)
+POST {{baseUrl}}/sessoes-treino/{{sessaoId}}/series
+Content-Type: application/json
+
+{
+  "itemFichaId": "{{itemFichaId}}",
+  "numeroSerie": 99,
+  "cargaUsada": 40,
+  "repeticoesFeitas": 10
+}
+
+### Finalizar novamente (409 esperado)
+POST {{baseUrl}}/sessoes-treino/{{sessaoId}}/finalizar

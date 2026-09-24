@@ -21,8 +21,7 @@ coverage/
 # NestJS / Prisma — backend
 # =========================================================
 backend/dist/
-backend/generated/
-prisma/generated/
+backend/src/generated/
 
 # Cliente Prisma gerado — artefato, nunca versionado
 **/node_modules/.prisma/
@@ -83,5 +82,3 @@ Thumbs.db
 # =========================================================
 *.log
 logs/
-
-/generated/prisma
