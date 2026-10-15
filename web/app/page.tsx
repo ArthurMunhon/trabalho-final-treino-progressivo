@@ -3,7 +3,6 @@ import Link from "next/link";
 export default function Home() {
   return (
       <div className="flex flex-col flex-1 min-h-screen bg-zinc-50 font-sans dark:bg-black">
-        {/* Header / Nav */}
         <header className="w-full border-b border-black/[.06] dark:border-white/[.08]">
           <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-8 py-5">
           <span className="text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
@@ -39,7 +38,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Hero */}
         <main className="flex flex-1 w-full max-w-3xl mx-auto flex-col items-center justify-center gap-8 py-32 px-16 text-center">
           <div className="flex flex-col items-center gap-6">
             <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-tight text-black dark:text-zinc-50">
