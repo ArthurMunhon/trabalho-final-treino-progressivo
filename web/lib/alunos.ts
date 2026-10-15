@@ -21,7 +21,7 @@ export type Pagina<T> = {
     totalDePaginas: number;
 };
 
-const API_URL = process.env.API_URL ?? "http://localhost:3001";
+const API_URL = process.env.API_URL ?? "http://localhost:3000";
 
 // ---------- Função auxiliar ----------
 // Faz a chamada à API e lança erro se algo der errado.

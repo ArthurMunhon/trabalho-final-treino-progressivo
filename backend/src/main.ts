@@ -20,8 +20,8 @@ async function bootstrap() {
   );
 
   // Back-end na porta 3001 (o Next usa a 3000)
-  await app.listen(3001);
-  console.log('🚀 Servidor NestJS rodando com sucesso na porta 3001!');
+  await app.listen(3000);
+  console.log('🚀 Servidor NestJS rodando com sucesso na porta 3000!');
 }
 
 bootstrap();

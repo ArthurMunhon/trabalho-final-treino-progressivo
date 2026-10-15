@@ -1,28 +1,40 @@
 // app/alunos/page.tsx
-// Server component: busca os alunos do personal e entrega ao painel.
+// Server component: lê ?busca e ?pagina da URL e pede ao back-end só aquela página.
 
 import PainelAlunos from "@/Components/Painelalunos";
 import type { AlunoCardProps } from "@/Components/AlunoCard";
-// ATENÇÃO: ajuste o nome da função e o formato conforme o seu lib/alunos.ts
 import { listarAlunos } from "@/lib/alunos";
 
-export default async function page() {
-    // Troque pelo que o seu lib realmente retorna
-    const { dados } = await listarAlunos({ limit: 100 });
+const POR_PAGINA = 9;
 
-    // Converte para o formato que o card espera.
-    // treinoHoje fica null até ligarmos com lib/sessoes.ts
-    const lista: AlunoCardProps[] = dados.map((a) => ({
-        id: String(a.id),
+export default async function AlunosPage({
+                                             searchParams,
+                                         }: {
+    // No Next 15/16, searchParams é uma Promise
+    searchParams: Promise<{ busca?: string; pagina?: string }>;
+}) {
+    const { busca = "", pagina: paginaTexto } = await searchParams;
+    const termo = busca.trim();
+    const pagina = Math.max(1, Number(paginaTexto) || 1);
+
+    const resultado = await listarAlunos({ page: pagina, limit: POR_PAGINA, busca: termo });
+
+    const lista: AlunoCardProps[] = resultado.dados.map((a) => ({
+        id: a.id,
         nome: a.nome,
-        objetivo: a.email,
-        treinoHoje: null,
+        objetivo: a.email, // aluno ainda não tem "objetivo"
+        treinoHoje: null,  // será ligado a lib/sessoes.ts depois
     }));
 
     return (
         <main className="mx-auto max-w-5xl p-6">
             <h1 className="mb-6 text-2xl font-bold text-gray-900">Meus Alunos</h1>
-            <PainelAlunos alunos={lista} />
+            <PainelAlunos
+                alunos={lista}
+                termo={termo}
+                pagina={resultado.page}
+                totalDePaginas={resultado.totalDePaginas}
+            />
         </main>
     );
 }
