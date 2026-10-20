@@ -7,11 +7,13 @@ import { ExerciciosModule } from './exercicios/exercicios.module.js';
 import { AlunosModule } from './alunos/alunos.module.js';
 import { FichasModule } from './fichas/fichas.module.js';
 import { SessoesTreinoModule } from './sessoes-treino/sessoes-treino.module.js';
+import { AuthModule } from './auth/auth.module.js'; // <-- Importe o módulo de auth
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    AuthModule, // <-- Adicione ele aqui nos imports
     ExerciciosModule,
     AlunosModule,
     FichasModule,

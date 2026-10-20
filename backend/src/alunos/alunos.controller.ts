@@ -9,11 +9,14 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { AlunosService } from './alunos.service.js';
+import AlunosService from './alunos.service.js';
 import { CreateAlunoDto } from './dto/create-aluno.dto.js';
 import { UpdateAlunoDto } from './dto/update-aluno.dto.js';
 import { QueryAlunoDto } from './dto/query-aluno.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { PersonalLogado } from '../auth/personal-logado.decorator.js';
 
 @Controller('alunos')
 export class AlunosController {
@@ -30,8 +33,12 @@ export class AlunosController {
   }
 
   @Post()
-  create(@Body() dto: CreateAlunoDto) {
-    return this.alunosService.create(dto);
+  @UseGuards(JwtAuthGuard) // Protege para exigir que o personal esteja logado
+  create(
+    @Body() dto: CreateAlunoDto,
+    @PersonalLogado() personal: { id: string }, // Pega o ID do personal direto do token JWT
+  ) {
+    return this.alunosService.create(dto, personal.id); // Envia o ID para o service salvar o vínculo
   }
 
   @Patch(':id')

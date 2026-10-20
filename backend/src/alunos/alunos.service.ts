@@ -8,11 +8,12 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateAlunoDto } from './dto/create-aluno.dto.js';
 import { UpdateAlunoDto } from './dto/update-aluno.dto.js';
 import { QueryAlunoDto } from './dto/query-aluno.dto.js';
+import { hash } from 'bcryptjs';
 
 const SEM_SENHA = { senha: true } as const;
 
 @Injectable()
-export class AlunosService {
+class AlunosService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: QueryAlunoDto) {
@@ -51,9 +52,19 @@ export class AlunosService {
     return aluno;
   }
 
-  async create(dto: CreateAlunoDto) {
+  async create(dto: CreateAlunoDto, personalId: string) {
     try {
-      return await this.prisma.aluno.create({ data: dto, omit: SEM_SENHA });
+      return await this.prisma.aluno.create({
+        data: {
+          nome: dto.nome,
+          email: dto.email,
+          senha: await hash(dto.senha, 10), // Criptografa a senha antes de salvar
+          personal: {
+            connect: { id: personalId }, // Vincula o aluno ao personal logado
+          },
+        },
+        omit: SEM_SENHA,
+      });
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -97,3 +108,5 @@ export class AlunosService {
     await this.prisma.aluno.delete({ where: { id } });
   }
 }
+
+export default AlunosService

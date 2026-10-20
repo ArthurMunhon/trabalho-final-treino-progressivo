@@ -18,10 +18,15 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const res = await fetch("/api/auth/login", {
+            // 1. Aponta para o backend na porta 3001 com a rota correta
+            // 2. Envia "senha" em vez de "password" para coincidir com o LoginDto
+            const res = await fetch("http://localhost:3001/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({
+                    email: email,
+                    senha: password
+                }),
             });
 
             if (!res.ok) {
@@ -30,8 +35,14 @@ export default function LoginPage() {
 
             const data = await res.json();
 
-            // guarda o token pra usar nas próximas requisições
-            localStorage.setItem("token", data.token);
+            // Salva o token e o nome para atualizar o cabeçalho e o dashboard
+            localStorage.setItem("token", data.accessToken || data.token);
+            if (data.personal?.nome) {
+                localStorage.setItem("userName", data.personal.nome);
+            }
+
+            // Dispara o evento para o Header atualizar os botões instantaneamente
+            window.dispatchEvent(new Event("auth-change"));
 
             router.push("/dashboard");
         } catch (err) {

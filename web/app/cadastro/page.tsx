@@ -21,16 +21,32 @@ export default function CadastroPage() {
         setLoading(true);
 
         try {
-            const res = await fetch("/api/auth/register", {
+            const res = await fetch("http://localhost:3001/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...form, role: "TRAINER" }),
+                body: JSON.stringify({
+                    nome: form.name,   // <-- Atenção aqui: o DTO espera "nome", mas o form estava enviando "name"
+                    email: form.email,
+                    senha: form.password // <-- E aqui: o DTO espera "senha", mas o form estava enviando "password"
+                }),
             });
 
             if (!res.ok) throw new Error("Não foi possível criar a conta");
 
+            // --- COLOCAR AQUI ---
             const data = await res.json();
-            localStorage.setItem("token", data.token);
+
+            // Salva o token (aceitando accessToken ou token)
+            localStorage.setItem("token", data.accessToken || data.token);
+
+            // Salva o nome para exibir no Dashboard
+            if (data.personal?.nome) {
+                localStorage.setItem("userName", data.personal.nome);
+            } else if (form.name) {
+                // Caso o backend não devolva o objeto personal na resposta do registro,
+                // usamos o nome preenchido no próprio formulário
+                localStorage.setItem("userName", form.name);
+            }
             router.push("/dashboard");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Erro ao cadastrar");

@@ -13,44 +13,48 @@ datasource db {
 }
 
 model Aluno {
-  id            String   @id @default(uuid())
+  id            String          @id @default(uuid())
   nome          String
-  email         String   @unique
+  email         String          @unique
   senha         String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  personalId    String
+  personal      Personal        @relation(fields: [personalId], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   fichas        Ficha[]
   sessao_treino Sessao_Treino[]
 }
 
-model Ficha{
-  id          String @id @default(uuid())
-  alunoId     String
-  aluno       Aluno @relation(fields: [alunoId], references: [id])
-  personalId  String
-  personal    Personal @relation(fields: [personalId], references: [id])
-  sessao_treino Sessao_Treino[]
-  itens         Item_Ficha[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-model Personal{
-  id     String @id @default(uuid())
+model Personal {
+  id     String  @id @default(uuid())
   nome   String
-  email  String @unique
+  email  String  @unique
   senha  String
+  alunos Aluno[]
   fichas Ficha[]
 }
 
+model Ficha {
+  id            String          @id @default(uuid())
+  alunoId       String
+  aluno         Aluno           @relation(fields: [alunoId], references: [id])
+  personalId    String
+  personal      Personal        @relation(fields: [personalId], references: [id])
+  sessao_treino Sessao_Treino[]
+  itens         Item_Ficha[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
 model Sessao_Treino {
-  id        String @id @default(uuid())
-  alunoId   String
-  aluno     Aluno @relation(fields: [alunoId], references: [id])
-  fichaId   String
-  ficha     Ficha @relation(fields: [fichaId], references: [id])
+  id              String            @id @default(uuid())
+  alunoId         String
+  aluno           Aluno             @relation(fields: [alunoId], references: [id])
+  fichaId         String
+  ficha           Ficha             @relation(fields: [fichaId], references: [id])
   serie_executada Serie_Executada[]
   data            DateTime
-  situacao        SituacaoSessao @default(em_andamento)
+  situacao        SituacaoSessao    @default(em_andamento)
 }
 
 enum SituacaoSessao {
@@ -59,34 +63,34 @@ enum SituacaoSessao {
 }
 
 model Serie_Executada {
-  id               String @id @default(uuid())
+  id               String        @id @default(uuid())
   sessao_treinoId  String
   sessao_treino    Sessao_Treino @relation(fields: [sessao_treinoId], references: [id])
   numero_Serie     Int
   cargaUsada       Float
   repeticoesFeitas Int
   itemFichaId      String
-  itemFicha        Item_Ficha @relation(fields: [itemFichaId], references: [id])
+  itemFicha        Item_Ficha    @relation(fields: [itemFichaId], references: [id])
 }
 
 model Item_Ficha {
-  id        String @id @default(uuid())
-  fichaId   String
-  ficha     Ficha @relation(fields: [fichaId], references: [id], onDelete: Cascade)
-  exercicioId String
-  exercicio Exercicio @relation(fields: [exercicioId], references: [id])
-  ordem     Int
-  seriesAlvo Int
-  repeticoesAlvo Int
+  id                String            @id @default(uuid())
+  fichaId           String
+  ficha             Ficha             @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  exercicioId       String
+  exercicio         Exercicio         @relation(fields: [exercicioId], references: [id])
+  ordem             Int
+  seriesAlvo        Int
+  repeticoesAlvo    Int
   cargaSugerida     Float
   series_executadas Serie_Executada[]
 }
 
 model Exercicio {
-  id            String   @id @default(uuid())
+  id            String       @id @default(uuid())
   nome          String
   grupoMuscular String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   item_ficha    Item_Ficha[]
 }

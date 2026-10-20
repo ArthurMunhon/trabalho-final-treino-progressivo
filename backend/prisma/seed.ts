@@ -1,74 +1,122 @@
-import { PrismaClient } from '../src/generated/prisma';
+// backend/prisma/seed.ts
+// Rodar na pasta backend:  npx tsx prisma/seed.ts
+// Pode rodar várias vezes sem duplicar dados.
 
-const prisma = new PrismaClient();
+import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+// tsx não lê o .env sozinho; carrega a DATABASE_URL daqui
+try {
+  process.loadEnvFile('.env');
+} catch {
+  // se o .env não existir, usa as variáveis do sistema
+}
+
+// Prisma 7 exige um adaptador do Postgres
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    console.log('Iniciando a seed do banco de dados...');
+  console.log('Iniciando a seed do banco de dados...');
 
-    // 1. Criar um Personal Trainer padr  ão
-    const personal = await prisma.personal.upsert({
-        where: { email: 'carlos@fittrack.com' },
-        update: {},
-        create: {
-            nome: 'Carlos Personal',
-            email: 'carlos@fittrack.com',
-            senha: 'hash-da-senha-123',
-        },
+  // 1. Personal trainer
+  const personal = await prisma.personal.upsert({
+    where: { email: 'carlos@fittrack.com' },
+    update: {},
+    create: {
+      nome: 'Carlos Personal',
+      email: 'carlos@fittrack.com',
+      senha: 'hash-da-senha-123',
+    },
+  });
+
+  // 2. Aluno
+  const aluno = await prisma.aluno.upsert({
+    where: { email: 'marcos@exemplo.com' },
+    update: {},
+    create: {
+      nome: 'Marcos Vinicius',
+      email: 'marcos@exemplo.com',
+      senha: 'hash-da-senha-123',
+      personalId: personal.id, // aluno pertence ao Carlos
+    },
+  });
+
+  // 2b. Mais alunos, pra testar busca e paginação (9 por página => 15 dá 2 páginas)
+  const outrosAlunos = [
+    ['Ana Beatriz', 'ana.beatriz@exemplo.com'],
+    ['Bruno Almeida', 'bruno.almeida@exemplo.com'],
+    ['Camila Souza', 'camila.souza@exemplo.com'],
+    ['Daniel Ferreira', 'daniel.ferreira@exemplo.com'],
+    ['Eduarda Lima', 'eduarda.lima@exemplo.com'],
+    ['Felipe Costa', 'felipe.costa@exemplo.com'],
+    ['Gabriela Rocha', 'gabriela.rocha@exemplo.com'],
+    ['Henrique Martins', 'henrique.martins@exemplo.com'],
+    ['Isabela Nunes', 'isabela.nunes@exemplo.com'],
+    ['José Carlos', 'jose.carlos@exemplo.com'],
+    ['Karina Duarte', 'karina.duarte@exemplo.com'],
+    ['Lucas Pereira', 'lucas.pereira@exemplo.com'],
+    ['Marina Silva', 'marina.silva@exemplo.com'],
+    ['Marcos Paulo', 'marcos.paulo@exemplo.com'],
+  ];
+
+  for (const [nome, email] of outrosAlunos) {
+    await prisma.aluno.upsert({
+      where: { email },
+      update: {},
+      create: {
+        nome,
+        email,
+        senha: 'hash-da-senha-123',
+        personalId: personal.id,
+      },
     });
+  }
 
-    // 2. Criar um Aluno padrão
-    const aluno = await prisma.aluno.upsert({
-        where: { email: 'marcos@exemplo.com' },
-        update: {},
-        create: {
-            nome: 'Marcos Vinicius',
-            email: 'marcos@exemplo.com',
-            senha: 'hash-da-senha-123',
-        },
-    });
+  // 3. Exercícios (só cria se ainda não existir um com o mesmo nome)
+  async function garantirExercicio(nome: string, grupoMuscular: string) {
+    const existente = await prisma.exercicio.findFirst({ where: { nome } });
+    return (
+      existente ?? prisma.exercicio.create({ data: { nome, grupoMuscular } })
+    );
+  }
 
-    // 3. Criar Exercícios iniciais
-    const exercicio1 = await prisma.exercicio.create({
-        data: {
-            nome: 'Supino reto com barra',
-            grupoMuscular: 'peito',
-        },
-    });
+  const exercicio1 = await garantirExercicio('Supino reto com barra', 'peito');
+  await garantirExercicio('Puxada alta', 'costas');
 
-    const exercicio2 = await prisma.exercicio.create({
-        data: {
-            nome: 'Puxada alta',
-            grupoMuscular: 'costas',
-        },
-    });
+  // 4. Ficha do aluno (só cria se ele ainda não tiver nenhuma)
+  const fichaExistente = await prisma.ficha.findFirst({
+    where: { alunoId: aluno.id },
+  });
 
-    // 4. Criar uma Ficha de Treino ligando o Aluno, o Personal e um Item (Exercício)
+  if (!fichaExistente) {
     await prisma.ficha.create({
-        data: {
-            alunoId: aluno.id,
-            personalId: personal.id,
-            itens: {
-                create: [
-                    {
-                        exercicioId: exercicio1.id,
-                        ordem: 1,
-                        seriesAlvo: 4,
-                        repeticoesAlvo: 10,
-                        cargaSugerida: 40,
-                    },
-                ],
+      data: {
+        alunoId: aluno.id,
+        personalId: personal.id,
+        itens: {
+          create: [
+            {
+              exercicioId: exercicio1.id,
+              ordem: 1,
+              seriesAlvo: 4,
+              repeticoesAlvo: 10,
+              cargaSugerida: 40,
             },
+          ],
         },
+      },
     });
+  }
 
-    console.log('Seed finalizada com sucesso!');
+  console.log('Seed finalizada com sucesso!');
 }
 
 main()
-    .catch((e) => {
-        console.error('Erro ao rodar a seed:', e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+  .catch((e) => {
+    console.error('Erro ao rodar a seed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

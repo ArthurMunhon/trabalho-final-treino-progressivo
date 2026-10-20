@@ -65,8 +65,8 @@ mobile/android/key.properties
 *.pem
 
 # Manter os arquivos de exemplo, sem credenciais reais
-!.env.example
-!**/.env.example
+!.env
+!**/.env
 
 # =========================================================
 # Editores e sistema operacional

@@ -2,42 +2,6 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-      <div className="flex flex-col flex-1 min-h-screen bg-zinc-50 font-sans dark:bg-black">
-        <header className="w-full border-b border-black/[.06] dark:border-white/[.08]">
-          <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-8 py-5">
-          <span className="text-lg font-semibold tracking-tight text-black dark:text-zinc-50">
-            FitTrack
-          </span>
-
-            <nav className="hidden items-center gap-8 text-sm font-medium text-zinc-600 dark:text-zinc-400 sm:flex">
-              <Link href="/alunos" className="hover:text-black dark:hover:text-white transition-colors">
-                Alunos
-              </Link>
-              <Link href="/treinos" className="hover:text-black dark:hover:text-white transition-colors">
-                Treinos
-              </Link>
-              <Link href="/planos" className="hover:text-black dark:hover:text-white transition-colors">
-                Planos
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <Link
-                  href="/login"
-                  className="flex h-10 items-center justify-center px-4 text-sm font-medium text-zinc-700 transition-colors hover:text-black dark:text-zinc-300 dark:hover:text-white"
-              >
-                Entrar
-              </Link>
-              <Link
-                  href="/cadastro"
-                  className="flex h-10 items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-              >
-                Criar conta
-              </Link>
-            </div>
-          </div>
-        </header>
-
         <main className="flex flex-1 w-full max-w-3xl mx-auto flex-col items-center justify-center gap-8 py-32 px-16 text-center">
           <div className="flex flex-col items-center gap-6">
             <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-tight text-black dark:text-zinc-50">
@@ -92,6 +56,5 @@ export default function Home() {
             </div>
           </div>
         </main>
-      </div>
   );
 }
