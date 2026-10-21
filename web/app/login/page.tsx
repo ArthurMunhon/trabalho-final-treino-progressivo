@@ -35,11 +35,14 @@ export default function LoginPage() {
 
             const data = await res.json();
 
-            // Salva o token e o nome para atualizar o cabeçalho e o dashboard
-            localStorage.setItem("token", data.accessToken || data.token);
-            if (data.personal?.nome) {
-                localStorage.setItem("userName", data.personal.nome);
+            // O site é só do personal; o aluno entra pelo app mobile
+            if (data.usuario?.perfil !== "personal") {
+                throw new Error("Alunos acessam pelo aplicativo mobile");
             }
+
+            // Salva o token e o nome para atualizar o cabeçalho e o dashboard
+            localStorage.setItem("token", data.accessToken);
+            localStorage.setItem("userName", data.usuario.nome);
 
             // Dispara o evento para o Header atualizar os botões instantaneamente
             window.dispatchEvent(new Event("auth-change"));

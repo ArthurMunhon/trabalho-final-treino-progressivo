@@ -36,17 +36,10 @@ export default function CadastroPage() {
             // --- COLOCAR AQUI ---
             const data = await res.json();
 
-            // Salva o token (aceitando accessToken ou token)
-            localStorage.setItem("token", data.accessToken || data.token);
-
-            // Salva o nome para exibir no Dashboard
-            if (data.personal?.nome) {
-                localStorage.setItem("userName", data.personal.nome);
-            } else if (form.name) {
-                // Caso o backend não devolva o objeto personal na resposta do registro,
-                // usamos o nome preenchido no próprio formulário
-                localStorage.setItem("userName", form.name);
-            }
+            // Resposta igual à do login: { accessToken, usuario: { id, nome, perfil } }
+            localStorage.setItem("token", data.accessToken);
+            localStorage.setItem("userName", data.usuario.nome);
+            window.dispatchEvent(new Event("auth-change"));
             router.push("/dashboard");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Erro ao cadastrar");

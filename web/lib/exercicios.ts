@@ -23,7 +23,7 @@ export type ResultadoEscrita<T> =
     | { situacao: "gravado"; dado: T }
     | { situacao: "recusado"; status: number; detalhes: string[] };
 
-const API_URL = process.env.API_URL ?? "http://localhost:3000";
+const API_URL = process.env.API_URL ?? "http://localhost:3001";
 export const ETIQUETA_EXERCICIOS = "exercicios";
 const VALIDADE_SEGUNDOS = 60;
 const ATRASO_MS = Number(process.env.ATRASO_API_MS ?? 0);
