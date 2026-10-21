@@ -22,8 +22,8 @@ A régua de qualidade é esta: na entrega final, o contrato precisa ser suficien
 | Campo | Valor |
 |---|---|
 | **Projeto** | Treino Progressivo |
-| **Versão do contrato** | 1.1 |
-| **Última atualização** | 2026-09-24 |
+| **Versão do contrato** | 1.2 |
+| **Última atualização** | 2026-10-21 |
 | **URL base (desenvolvimento)** | `http://localhost:3000` |
 | **Formato** | JSON (`Content-Type: application/json`) |
 
@@ -133,7 +133,49 @@ Autentica o usuário e devolve o token de acesso.
 | `400` | Corpo inválido (e-mail ausente, formato incorreto) |
 | `401` | Credenciais incorretas |
 
-Não há auto-cadastro. Um `personal` é criado por seed inicial do banco; cada `personal` cadastra seus próprios alunos via `POST /alunos` (seção 3.3), que recebem uma senha provisória definida pelo personal.
+O mesmo endpoint atende os dois perfis: o servidor procura o e-mail entre os personais e depois entre os alunos, e devolve o `perfil` correspondente. O cliente web aceita apenas `perfil: "personal"`; o app mobile, apenas `perfil: "aluno"`.
+
+#### `POST /auth/register`
+
+Auto-cadastro de **personal** pelo cliente web. Rota pública. Já devolve o usuário autenticado, no mesmo formato do login.
+
+Alunos não se cadastram sozinhos: cada `personal` cadastra os próprios alunos via `POST /alunos` (seção 3.3), com uma senha provisória definida por ele.
+
+**Requisição**
+
+```json
+{
+  "nome": "Fernanda Reis",
+  "email": "fernanda@exemplo.com",
+  "senha": "minimo-6-caracteres"
+}
+```
+
+| Campo | Regra |
+|---|---|
+| `nome` | string (1–120) |
+| `email` | formato de e-mail; único no sistema (entre personais e alunos) |
+| `senha` | mínimo de 6 caracteres; salva apenas como hash |
+
+**Resposta `201`**
+
+```json
+{
+  "accessToken": "eyJhbGciOi...",
+  "usuario": {
+    "id": "9f1c2b6e-4a7d-4b28-9a4e-2d5f8c1e7b30",
+    "nome": "Fernanda Reis",
+    "perfil": "personal"
+  }
+}
+```
+
+**Erros**
+
+| Status | Quando |
+|---|---|
+| `400` | Campo obrigatório ausente, e-mail inválido ou senha curta |
+| `409` | Já existe usuário com esse e-mail |
 
 ### 2.3 Perfis e permissões
 
@@ -257,7 +299,18 @@ Cadastra um exercício. Rota autenticada — **somente perfil `personal`**.
 }
 ```
 
-Não há endpoint de CRUD público para `Personal` no MVP — a conta é provisionada por seed do banco. `GET /auth/login` é o único ponto de contato deste recurso no contrato.
+A conta é criada por `POST /auth/register` (seção 2.2) ou pela seed do banco. Não há listagem, edição nem remoção de personal no MVP.
+
+#### `GET /personal/me`
+
+Devolve o personal autenticado (usado no cabeçalho do web). Rota autenticada — **somente perfil `personal`**.
+
+**Resposta `200`** — a representação acima, sem o campo `senha`.
+
+| Status | Quando |
+|---|---|
+| `401` | Token ausente, inválido ou expirado |
+| `403` | Perfil `aluno` |
 
 ---
 
@@ -737,3 +790,4 @@ Se o grupo habilitar o Swagger, este documento continua sendo necessário: o Swa
 |---|---|---|---|
 | 1.0 | 2026-09-12 | Versão inicial: autenticação, `Exercicio`, `Aluno`, `Personal`, `Ficha`, `ItemFicha`, `SessaoTreino` e regra de sobrecarga progressiva | — |
 | 1.1 | 2026-09-24 | Adiciona `DELETE /alunos/:id` (faltava no contrato original) | Web: personal passa a poder remover um aluno |
+| 1.2 | 2026-10-21 | Adiciona auto-cadastro de personal (`POST /auth/register`) e `GET /personal/me`; login atende personal e aluno no mesmo endpoint | Web: tela de cadastro passa a ser oficial e lê `usuario` na resposta; mobile: nenhum |
