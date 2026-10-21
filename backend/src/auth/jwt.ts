@@ -3,7 +3,9 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 
-export type PayloadToken = { sub: string; email: string };
+// Contrato, seção 2.1: o token leva sub (id do usuário) e perfil
+export type Perfil = 'personal' | 'aluno';
+export type PayloadToken = { sub: string; perfil: Perfil };
 
 // Lê o segredo só na hora de usar, para o ConfigModule já ter carregado o .env
 function segredo() {
@@ -12,9 +14,9 @@ function segredo() {
   return new TextEncoder().encode(valor);
 }
 
-// Gera o token. sub = id do personal; expira em JWT_EXPIRES_IN (padrão 8h).
+// Gera o token. sub = id do usuário; expira em JWT_EXPIRES_IN (padrão 8h).
 export function assinarToken(payload: PayloadToken) {
-  return new SignJWT({ email: payload.email })
+  return new SignJWT({ perfil: payload.perfil })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(payload.sub)
     .setIssuedAt()
@@ -28,5 +30,8 @@ export async function verificarToken(token: string): Promise<PayloadToken> {
     algorithms: ['HS256'],
   });
   if (!payload.sub) throw new Error('Token sem sub');
-  return { sub: payload.sub, email: String(payload.email) };
+  if (payload.perfil !== 'personal' && payload.perfil !== 'aluno') {
+    throw new Error('Token sem perfil valido');
+  }
+  return { sub: payload.sub, perfil: payload.perfil };
 }

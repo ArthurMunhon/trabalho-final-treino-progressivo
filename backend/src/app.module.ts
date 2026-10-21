@@ -7,13 +7,15 @@ import { ExerciciosModule } from './exercicios/exercicios.module.js';
 import { AlunosModule } from './alunos/alunos.module.js';
 import { FichasModule } from './fichas/fichas.module.js';
 import { SessoesTreinoModule } from './sessoes-treino/sessoes-treino.module.js';
-import { AuthModule } from './auth/auth.module.js'; // <-- Importe o módulo de auth
+import { AuthModule } from './auth/auth.module.js';
+import { PersonalModule } from './personal/personal.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    AuthModule, // <-- Adicione ele aqui nos imports
+    AuthModule,
+    PersonalModule,
     ExerciciosModule,
     AlunosModule,
     FichasModule,

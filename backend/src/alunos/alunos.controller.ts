@@ -16,7 +16,11 @@ import { CreateAlunoDto } from './dto/create-aluno.dto.js';
 import { UpdateAlunoDto } from './dto/update-aluno.dto.js';
 import { QueryAlunoDto } from './dto/query-aluno.dto.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { PersonalLogado } from '../auth/personal-logado.decorator.js';
+import {
+  Perfis,
+  UsuarioLogado,
+  type UsuarioDoToken,
+} from '../auth/usuario-logado.decorator.js';
 
 @Controller('alunos')
 export class AlunosController {
@@ -34,11 +38,12 @@ export class AlunosController {
 
   @Post()
   @UseGuards(JwtAuthGuard) // Protege para exigir que o personal esteja logado
+  @Perfis('personal') // aluno recebe 403 (contrato, 3.3)
   create(
     @Body() dto: CreateAlunoDto,
-    @PersonalLogado() personal: { id: string }, // Pega o ID do personal direto do token JWT
+    @UsuarioLogado() usuario: UsuarioDoToken, // Pega o ID do personal direto do token JWT
   ) {
-    return this.alunosService.create(dto, personal.id); // Envia o ID para o service salvar o vínculo
+    return this.alunosService.create(dto, usuario.id); // Envia o ID para o service salvar o vínculo
   }
 
   @Patch(':id')
