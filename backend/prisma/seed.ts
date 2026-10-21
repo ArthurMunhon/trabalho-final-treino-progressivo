@@ -4,6 +4,7 @@
 
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { hash } from 'bcryptjs';
 
 // tsx não lê o .env sozinho; carrega a DATABASE_URL daqui
 try {
@@ -19,25 +20,28 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('Iniciando a seed do banco de dados...');
 
+  // Mesmo hash que o AuthService usa no cadastro; senha de teste de todos: 123456
+  const senhaHash = await hash('123456', 10);
+
   // 1. Personal trainer
   const personal = await prisma.personal.upsert({
     where: { email: 'carlos@fittrack.com' },
-    update: {},
+    update: { senha: senhaHash }, // garante o hash mesmo se ele ja existia com senha antiga
     create: {
       nome: 'Carlos Personal',
       email: 'carlos@fittrack.com',
-      senha: 'hash-da-senha-123',
+      senha: senhaHash,
     },
   });
 
   // 2. Aluno
   const aluno = await prisma.aluno.upsert({
     where: { email: 'marcos@exemplo.com' },
-    update: {},
+    update: { senha: senhaHash }, // idem: ele foi criado antes do hash
     create: {
       nome: 'Marcos Vinicius',
       email: 'marcos@exemplo.com',
-      senha: 'hash-da-senha-123',
+      senha: senhaHash,
       personalId: personal.id, // aluno pertence ao Carlos
     },
   });
@@ -67,7 +71,7 @@ async function main() {
       create: {
         nome,
         email,
-        senha: 'hash-da-senha-123',
+        senha: senhaHash,
         personalId: personal.id,
       },
     });
