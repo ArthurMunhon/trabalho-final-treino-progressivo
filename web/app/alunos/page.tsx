@@ -5,6 +5,7 @@ import PainelAlunos from "@/Components/Painelalunos";
 import { enderecoDaPagina } from "@/Components/Paginacao";
 import type { AlunoCardProps } from "@/Components/AlunoCard";
 import { listarAlunos } from "@/lib/alunos";
+import { exigirUsuario } from "@/lib/sessao";
 
 export const metadata: Metadata = {
     title: "Alunos",
@@ -27,6 +28,8 @@ function lerPagina(valor: string | string[] | undefined): number | null {
 
 // Ler `searchParams` já torna a página dinâmica (depende da requisição).
 export default async function Page({ searchParams }: PageProps<"/alunos">) {
+    await exigirUsuario(); // sem login, vai para /login
+
     const { busca, pagina } = await searchParams;
 
     // `?busca=a&busca=b` chega como vetor. Só o texto simples é aceito.

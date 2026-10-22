@@ -1,13 +1,12 @@
 // app/dashboard/page.tsx
-// Painel de boas-vindas. Fica protegido pelo proxy.ts (sem login nem chega aqui),
-// então não precisa checar token nem redirecionar nada dentro da página.
-// É um componente de servidor: lê o nome do cookie "nome" (gravado no login).
+// Painel de boas-vindas. Protegido pelo exigirUsuario(): sem login, vai para /login.
+// É um componente de servidor: o nome vem da API (GET /personal/me) com o token do cookie.
 
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { exigirUsuario } from "@/lib/sessao";
 
 export default async function DashboardPage() {
-    const nome = (await cookies()).get("nome")?.value ?? "Personal";
+    const { nome } = await exigirUsuario();
 
     return (
         <div className="max-w-6xl mx-auto py-8 px-4 flex flex-col gap-10">

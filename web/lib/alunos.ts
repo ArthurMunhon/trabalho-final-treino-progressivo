@@ -1,4 +1,5 @@
 import "server-only";
+import { lerToken } from "@/lib/sessao";
 
 // ---------- Tipos ----------
 export type Aluno = {
@@ -26,10 +27,15 @@ const API_URL = process.env.API_URL ?? "http://localhost:3001";
 // ---------- Função auxiliar ----------
 // Faz a chamada à API e lança erro se algo der errado.
 // cache: "no-store" = sempre busca dados novos (mais simples, sem cache).
+// O token do cookie vai no header: a API só devolve os alunos do personal logado.
 async function chamarApi(caminho: string, opcoes: RequestInit = {}) {
+    const token = await lerToken();
     const resposta = await fetch(`${API_URL}${caminho}`, {
         cache: "no-store",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         signal: AbortSignal.timeout(5000), // desiste depois de 5 segundos
         ...opcoes,
     });
