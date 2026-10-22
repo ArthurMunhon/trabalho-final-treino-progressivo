@@ -27,8 +27,13 @@ export class AlunosController {
   constructor(private readonly alunosService: AlunosService) {}
 
   @Get()
-  findAll(@Query() query: QueryAlunoDto) {
-    return this.alunosService.findAll(query);
+  @UseGuards(JwtAuthGuard) // Exige token valido
+  @Perfis('personal') // aluno recebe 403 (contrato, 3.3)
+  findAll(
+    @Query() query: QueryAlunoDto,
+    @UsuarioLogado() usuario: UsuarioDoToken, // Personal logado vem do token
+  ) {
+    return this.alunosService.findAll(query, usuario.id); // Lista so os alunos dele
   }
 
   @Get(':id')

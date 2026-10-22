@@ -16,17 +16,21 @@ const SEM_SENHA = { senha: true } as const;
 class AlunosService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(query: QueryAlunoDto) {
+  async findAll(query: QueryAlunoDto, personalId: string) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
-    const where = query.busca
-      ? {
-          OR: [
-            { nome: { contains: query.busca, mode: 'insensitive' as const } },
-            { email: { contains: query.busca, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    // Sempre filtra pelo personal logado; a busca e opcional
+    const where = {
+      personalId,
+      ...(query.busca
+        ? {
+            OR: [
+              { nome: { contains: query.busca, mode: 'insensitive' as const } },
+              { email: { contains: query.busca, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
 
     const [dados, total] = await Promise.all([
       this.prisma.aluno.findMany({
