@@ -1,9 +1,11 @@
 // backend/prisma/seed.ts
 // Rodar na pasta backend:  npx tsx prisma/seed.ts
 // Pode rodar várias vezes sem duplicar dados.
+// Login de teste: carlos@fittrack.com / 123456
 
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { hash } from 'bcryptjs';
 
 // tsx não lê o .env sozinho; carrega a DATABASE_URL daqui
 try {
@@ -19,25 +21,28 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('Iniciando a seed do banco de dados...');
 
+  // Senha de todos os usuários de teste: 123456 (salva como hash, nunca em texto)
+  const senhaHash = await hash('123456', 10);
+
   // 1. Personal trainer
   const personal = await prisma.personal.upsert({
     where: { email: 'carlos@fittrack.com' },
-    update: {},
+    update: { senha: senhaHash }, // atualiza se já existia com senha antiga
     create: {
       nome: 'Carlos Personal',
       email: 'carlos@fittrack.com',
-      senha: 'hash-da-senha-123',
+      senha: senhaHash,
     },
   });
 
-  // 2. Aluno
+  // 2. Aluno principal
   const aluno = await prisma.aluno.upsert({
     where: { email: 'marcos@exemplo.com' },
-    update: {},
+    update: { personalId: personal.id },
     create: {
       nome: 'Marcos Vinicius',
       email: 'marcos@exemplo.com',
-      senha: 'hash-da-senha-123',
+      senha: senhaHash,
       personalId: personal.id, // aluno pertence ao Carlos
     },
   });
@@ -63,11 +68,11 @@ async function main() {
   for (const [nome, email] of outrosAlunos) {
     await prisma.aluno.upsert({
       where: { email },
-      update: {},
+      update: { personalId: personal.id },
       create: {
         nome,
         email,
-        senha: 'hash-da-senha-123',
+        senha: senhaHash,
         personalId: personal.id,
       },
     });

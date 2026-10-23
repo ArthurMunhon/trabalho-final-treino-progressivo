@@ -20,7 +20,7 @@ export default function LoginPage() {
         try {
             // 1. Aponta para o backend na porta 3001 com a rota correta
             // 2. Envia "senha" em vez de "password" para coincidir com o LoginDto
-            const res = await fetch("http://localhost:3001/auth/login", {
+            const res = await fetch("http://localhost:3001/personal/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

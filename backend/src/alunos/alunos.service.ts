@@ -16,22 +16,26 @@ const SEM_SENHA = { senha: true } as const;
 class AlunosService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(query: QueryAlunoDto) {
+  // Lista SÓ os alunos do personal logado
+  async findAll(query: QueryAlunoDto, personalId: string) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
-    const where = query.busca
-      ? {
-          OR: [
-            { nome: { contains: query.busca, mode: 'insensitive' as const } },
-            { email: { contains: query.busca, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+
+    const where = {
+      personalId, // O FILTRO DO PERSONAL
+      ...(query.busca && {
+        OR: [
+          { nome: { contains: query.busca, mode: 'insensitive' as const } },
+          { email: { contains: query.busca, mode: 'insensitive' as const } },
+        ],
+      }),
+    };
 
     const [dados, total] = await Promise.all([
       this.prisma.aluno.findMany({
         where,
         omit: SEM_SENHA,
+        orderBy: { nome: 'asc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -41,9 +45,10 @@ class AlunosService {
     return { dados, total, page, limit };
   }
 
-  async findOne(id: string) {
-    const aluno = await this.prisma.aluno.findUnique({
-      where: { id },
+  // Só acha se o aluno for deste personal (senão, 404)
+  async findOne(id: string, personalId: string) {
+    const aluno = await this.prisma.aluno.findFirst({
+      where: { id, personalId },
       omit: SEM_SENHA,
     });
     if (!aluno) {
@@ -58,10 +63,8 @@ class AlunosService {
         data: {
           nome: dto.nome,
           email: dto.email,
-          senha: await hash(dto.senha, 10), // Criptografa a senha antes de salvar
-          personal: {
-            connect: { id: personalId }, // Vincula o aluno ao personal logado
-          },
+          senha: await hash(dto.senha, 10),
+          personal: { connect: { id: personalId } },
         },
         omit: SEM_SENHA,
       });
@@ -76,8 +79,8 @@ class AlunosService {
     }
   }
 
-  async update(id: string, dto: UpdateAlunoDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateAlunoDto, personalId: string) {
+    await this.findOne(id, personalId); // garante que é dele
     try {
       return await this.prisma.aluno.update({
         where: { id },
@@ -95,8 +98,8 @@ class AlunosService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, personalId: string) {
+    await this.findOne(id, personalId); // garante que é dele
 
     const fichas = await this.prisma.ficha.count({ where: { alunoId: id } });
     if (fichas > 0) {
@@ -109,4 +112,4 @@ class AlunosService {
   }
 }
 
-export default AlunosService
+export default AlunosService;

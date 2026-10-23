@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { verificarToken } from './jwt.js';
-import type { RequestComPersonal } from './personal-logado.decorator.js';
+import type { RequestComPersonal } from '../personal/personal-logado.decorator.js';
 
 // Guard: só deixa passar quem manda "Authorization: Bearer <token>" válido.
 // Uso:  @UseGuards(JwtAuthGuard) no controller ou na rota.

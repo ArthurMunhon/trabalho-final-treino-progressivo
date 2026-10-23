@@ -1,18 +1,64 @@
-@baseUrl = http://localhost:3000
+@baseUrl = http://localhost:3001
 
-### Listar alunos (paginado)
-GET {{baseUrl}}/alunos?page=1&limit=20
+###############################################
+# 1) CONTA DO PERSONAL
+###############################################
 
-### Buscar aluno por nome ou email
-GET {{baseUrl}}/alunos?busca=marcos
-
-### Criar aluno (sucesso, 201 esperado, sem senha na resposta)
-POST {{baseUrl}}/alunos
+### Cadastrar personal (201). Só funciona se o e-mail ainda não existir
+POST {{baseUrl}}/personal/register
 Content-Type: application/json
 
 {
-  "nome": "Marcos Vinicius",
-  "email": "marcos@exemplo.com",
+  "nome": "Outro Personal",
+  "email": "outro@fittrack.com",
+  "senha": "123456"
+}
+
+### Login do Carlos (200). Guarda o token para os próximos pedidos
+POST {{baseUrl}}/personal/login
+Content-Type: application/json
+
+{
+  "email": "carlos@fittrack.com",
+  "senha": "123456"
+}
+
+> {%
+    client.global.set("token", response.body.accessToken);
+%}
+
+### Login com senha errada (401 esperado)
+POST {{baseUrl}}/personal/login
+Content-Type: application/json
+
+{
+  "email": "carlos@fittrack.com",
+  "senha": "errada"
+}
+
+###############################################
+# 2) ALUNOS (todos usam o token do login)
+###############################################
+
+### Sem token (401 esperado)
+GET {{baseUrl}}/alunos
+
+### Listar alunos do Carlos (paginado)
+GET {{baseUrl}}/alunos?page=1&limit=9
+Authorization: Bearer {{token}}
+
+### Buscar por nome ou e-mail
+GET {{baseUrl}}/alunos?busca=marcos
+Authorization: Bearer {{token}}
+
+### Criar aluno (201, sem senha na resposta)
+POST {{baseUrl}}/alunos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Aluno Teste",
+  "email": "aluno.teste@exemplo.com",
   "senha": "senha-provisoria-123"
 }
 
@@ -20,18 +66,20 @@ Content-Type: application/json
     client.global.set("alunoId", response.body.id);
 %}
 
-### Criar aluno com email duplicado (409 esperado)
+### E-mail duplicado (409 esperado)
 POST {{baseUrl}}/alunos
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "nome": "Outro",
-  "email": "marcos@exemplo.com",
-  "senha": "123"
+  "email": "aluno.teste@exemplo.com",
+  "senha": "123456"
 }
 
-### Criar aluno invalido (400 esperado, email mal formado)
+### Dados inválidos (400 esperado)
 POST {{baseUrl}}/alunos
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -40,19 +88,23 @@ Content-Type: application/json
   "senha": "123"
 }
 
-### Obter aluno criado acima (200 esperado, sem senha)
+### Buscar o aluno criado (200)
 GET {{baseUrl}}/alunos/{{alunoId}}
+Authorization: Bearer {{token}}
 
-### Obter aluno inexistente (404 esperado)
+### Aluno inexistente (404 esperado)
 GET {{baseUrl}}/alunos/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
 
-### Atualizar aluno criado acima (200 esperado)
+### Atualizar aluno (200)
 PATCH {{baseUrl}}/alunos/{{alunoId}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "nome": "Marcos V."
+  "nome": "Aluno Teste Editado"
 }
 
-### Deletar Aluno
+### Deletar aluno (204)
 DELETE {{baseUrl}}/alunos/{{alunoId}}
+Authorization: Bearer {{token}}
