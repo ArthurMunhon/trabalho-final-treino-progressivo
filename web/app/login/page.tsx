@@ -2,11 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { login } from "@/lib/personal";
 import Link from "next/link";
 
 export default function LoginPage() {
-    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -17,37 +16,13 @@ export default function LoginPage() {
         setError("");
         setLoading(true);
 
-        try {
-            // 1. Aponta para o backend na porta 3001 com a rota correta
-            // 2. Envia "senha" em vez de "password" para coincidir com o LoginDto
-            const res = await fetch("http://localhost:3001/personal/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: email,
-                    senha: password
-                }),
-            });
+        // Chama a função do servidor (lib/personal.ts): se der certo, ela grava
+        // o cookie com o token e já leva para o /dashboard.
+        // Se der errado, devolve a mensagem de erro.
+        const resultado = await login(email, password);
 
-            if (!res.ok) {
-                throw new Error("Email ou senha inválidos");
-            }
-
-            const data = await res.json();
-
-            // Salva o token e o nome para atualizar o cabeçalho e o dashboard
-            localStorage.setItem("token", data.accessToken || data.token);
-            if (data.personal?.nome) {
-                localStorage.setItem("userName", data.personal.nome);
-            }
-
-            // Dispara o evento para o Header atualizar os botões instantaneamente
-            window.dispatchEvent(new Event("auth-change"));
-
-            router.push("/dashboard");
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Erro ao entrar");
-        } finally {
+        if (resultado?.erro) {
+            setError(resultado.erro);
             setLoading(false);
         }
     }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import Header from "@/Components/Header";
 
@@ -18,15 +19,21 @@ export const metadata: Metadata = {
     description: "Treinos para os seus alunos",
 };
 
-export default function RootLayout({
-                                       children,
-                                   }: {
+// async: precisa esperar a leitura dos cookies
+export default async function RootLayout({
+                                             children,
+                                         }: {
     children: React.ReactNode;
 }) {
+    // Só olha se os cookies existem. Quem protege as páginas de verdade é o proxy.ts.
+    const jar = await cookies();
+    const logado = Boolean(jar.get("token")?.value);
+    const nome = jar.get("nome")?.value;
+
     return (
         <html lang="pt-BR">
         <body className={`${geistSans.variable} ${geistMono.variable} bg-black text-white antialiased min-h-screen flex flex-col`}>
-        <Header />
+        <Header logado={logado} nome={nome} />
         <main className="flex-1 p-8">{children}</main>
         </body>
         </html>
