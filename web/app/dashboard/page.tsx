@@ -5,10 +5,13 @@
 
 import { cookies } from "next/headers";
 import Link from "next/link";
+import {redirect} from "next/navigation";
 
 export default async function DashboardPage() {
-    const nome = (await cookies()).get("nome")?.value ?? "Personal";
+    const nome = (await cookies()).get("nome")?.value;
 
+    // Sem o cookie do nome (ninguém logado), volta para a página inicial
+    if (!nome) redirect("/login");
     return (
         <div className="max-w-6xl mx-auto py-8 px-4 flex flex-col gap-10">
             {/* Cabeçalho de Boas-Vindas */}

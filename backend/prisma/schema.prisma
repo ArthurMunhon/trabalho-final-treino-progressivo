@@ -17,8 +17,9 @@ model Aluno {
   nome          String
   email         String          @unique
   senha         String
-  personalId    String
-  personal      Personal        @relation(fields: [personalId], references: [id])
+  personalId    String? // vazio até o personal aceitar
+  personal      Personal?       @relation(fields: [personalId], references: [id])
+  solicitacoes  Solicitacao[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   fichas        Ficha[]
@@ -26,12 +27,13 @@ model Aluno {
 }
 
 model Personal {
-  id     String  @id @default(uuid())
-  nome   String
-  email  String  @unique
-  senha  String
-  alunos Aluno[]
-  fichas Ficha[]
+  id           String        @id @default(uuid())
+  nome         String
+  email        String        @unique
+  senha        String
+  alunos       Aluno[]
+  fichas       Ficha[]
+  solicitacoes Solicitacao[]
 }
 
 model Ficha {
@@ -88,9 +90,20 @@ model Item_Ficha {
 
 model Exercicio {
   id            String       @id @default(uuid())
-  nome          String
+  nome          String       @unique
   grupoMuscular String
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   item_ficha    Item_Ficha[]
+}
+
+model Solicitacao {
+  id         String   @id @default(uuid())
+  alunoId    String
+  aluno      Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  personalId String
+  personal   Personal @relation(fields: [personalId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([alunoId, personalId]) // impede pedido repetido para o mesmo personal
 }
