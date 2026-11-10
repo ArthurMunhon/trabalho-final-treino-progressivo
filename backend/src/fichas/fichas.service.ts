@@ -11,6 +11,21 @@ import { QueryFichaDto } from './dto/query-ficha.dto.js';
 import { CreateItemFichaDto } from './dto/create-item-ficha.dto.js';
 import { UpdateItemFichaDto } from './dto/update-item-ficha.dto.js';
 
+// Garante as regras de um item: catálogo XOR personalizado; força e cardio com seus campos
+function validarItem(dto: CreateItemFichaDto) {
+  if (!dto.exercicioId === !dto.nomePersonalizado?.trim()) {
+    throw new BadRequestException(
+      'Informe exercicioId OU nomePersonalizado (apenas um)',
+    );
+  }
+  if (dto.tipo === 'forca' && (!dto.seriesAlvo || !dto.repeticoesAlvo)) {
+    throw new BadRequestException('Força exige seriesAlvo e repeticoesAlvo');
+  }
+  if (dto.tipo === 'cardio' && !dto.duracaoMin) {
+    throw new BadRequestException('Cardio exige duracaoMin');
+  }
+}
+
 const COM_ITENS = { itens: { include: { exercicio: true } } } as const;
 
 @Injectable()
@@ -73,8 +88,17 @@ export class FichasService {
       throw new BadRequestException('personalId inexistente');
     }
 
+    dto.itens?.forEach(validarItem);
+
     if (dto.itens?.length) {
-      const exercicioIds = [...new Set(dto.itens.map((i) => i.exercicioId))];
+      // Só confere no banco os itens que vêm do catálogo
+      const exercicioIds = [
+        ...new Set(
+          dto.itens
+            .map((i) => i.exercicioId)
+            .filter((id): id is string => !!id),
+        ),
+      ];
       const count = await this.prisma.exercicio.count({
         where: { id: { in: exercicioIds } },
       });
@@ -137,12 +161,18 @@ export class FichasService {
       throw new NotFoundException(`Ficha ${fichaId} nao encontrada`);
     }
 
-    const exercicio = await this.prisma.exercicio.findUnique({
-      where: { id: dto.exercicioId },
-      select: { id: true },
-    });
-    if (!exercicio) {
-      throw new NotFoundException(`Exercicio ${dto.exercicioId} nao encontrado`);
+    validarItem(dto);
+
+    if (dto.exercicioId) {
+      const exercicio = await this.prisma.exercicio.findUnique({
+        where: { id: dto.exercicioId },
+        select: { id: true },
+      });
+      if (!exercicio) {
+        throw new NotFoundException(
+          `Exercicio ${dto.exercicioId} nao encontrado`,
+        );
+      }
     }
 
     return this.prisma.item_Ficha.create({

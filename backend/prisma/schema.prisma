@@ -75,17 +75,35 @@ model Serie_Executada {
   itemFicha        Item_Ficha    @relation(fields: [itemFichaId], references: [id])
 }
 
+enum TipoExercicio {
+  forca
+  cardio
+}
+
 model Item_Ficha {
-  id                String            @id @default(uuid())
-  fichaId           String
-  ficha             Ficha             @relation(fields: [fichaId], references: [id], onDelete: Cascade)
-  exercicioId       String
-  exercicio         Exercicio         @relation(fields: [exercicioId], references: [id])
-  ordem             Int
-  seriesAlvo        Int
-  repeticoesAlvo    Int
-  cargaSugerida     Float
-  series_executadas Serie_Executada[]
+  id      String @id @default(uuid()) // <- era o que faltava
+  fichaId String
+  ficha   Ficha  @relation(fields: [fichaId], references: [id])
+  ordem   Int
+
+  // Catálogo OU personalizado
+  exercicioId       String?
+  exercicio         Exercicio? @relation(fields: [exercicioId], references: [id])
+  nomePersonalizado String?
+
+  tipo TipoExercicio @default(forca)
+
+  // Força
+  seriesAlvo     Int?
+  repeticoesAlvo Int?
+  cargaSugerida  Float?
+
+  // Cardio
+  duracaoMin    Int?
+  velocidadeKmh Float?
+  inclinacaoPct Float?
+
+  series Serie_Executada[] // <- relação inversa da Serie_Executada
 }
 
 model Exercicio {

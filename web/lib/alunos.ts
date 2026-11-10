@@ -1,6 +1,7 @@
 import "server-only";
 import {redirect} from "next/navigation";
 import {cookies} from "next/headers";
+import {chamarApi} from "@/lib/api";
 
 // ---------- Tipos ----------
 export type Aluno = {
@@ -25,25 +26,7 @@ export type Pagina<T> = {
 
 const API_URL = process.env.API_URL ?? "http://localhost:3001";
 
-async function chamarApi(caminho: string, opcoes: RequestInit = {}) {
-    // Lê o token que o login gravou no cookie
-    const token = (await cookies()).get("token")?.value;
 
-    const resposta = await fetch(`${API_URL}${caminho}`, {
-        cache: "no-store",
-        signal: AbortSignal.timeout(5000),
-        ...opcoes,
-        headers: {
-            "Content-Type": "application/json",
-            // Manda o token: o back-end descobre o personal por ele
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-    });
-
-    // Token ausente ou expirado: volta para o login
-    if (resposta.status === 401) redirect("/login");
-    return resposta;
-}
 // ---------- Funções ----------
 export async function listarAlunos(
     { page = 1, limit = 20, busca = "" } = {}
