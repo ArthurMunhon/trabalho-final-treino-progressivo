@@ -38,4 +38,12 @@ class ItemFicha {
 
   /// Nome que aparece na tela: do catálogo ou o personalizado.
   String get nome => exercicio?.nome ?? nomePersonalizado ?? 'Exercício';
+
+  /// Meta definida pelo personal, em texto.
+  String get alvo {
+    if (tipo == TipoExercicio.cardio) {
+      return '$duracaoMin min · $velocidadeKmh km/h · $inclinacaoPct%';
+    }
+    return '${seriesAlvo}x$repeticoesAlvo · $cargaSugerida kg';
+  }
 }
