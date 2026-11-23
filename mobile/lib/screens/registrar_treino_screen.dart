@@ -5,16 +5,16 @@ import 'package:treino_progressivo/models/sessao_treino.dart';
 
 /// Tela onde o aluno registra as séries enquanto treina.
 /// Ao finalizar, devolve a SessaoTreino com Navigator.pop.
-class TelaRegistrarTreino extends StatefulWidget {
-  const TelaRegistrarTreino({super.key, required this.ficha});
+class RegistrarTreinoScreen extends StatefulWidget {
+  const RegistrarTreinoScreen({super.key, required this.ficha});
 
   final Ficha ficha;
 
   @override
-  State<TelaRegistrarTreino> createState() => _TelaRegistrarTreinoState();
+  State<RegistrarTreinoScreen> createState() => _RegistrarTreinoScreenState();
 }
 
-class _TelaRegistrarTreinoState extends State<TelaRegistrarTreino> {
+class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
   // Séries feitas até agora, separadas por item da ficha (chave = item.id)
   final Map<String, List<SerieExecutada>> _seriesPorItem = {};
 
