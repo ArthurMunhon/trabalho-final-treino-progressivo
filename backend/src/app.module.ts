@@ -9,6 +9,7 @@ import { FichasModule } from './fichas/fichas.module.js';
 import { SessoesTreinoModule } from './sessoes-treino/sessoes-treino.module.js';
 import { PersonalModule } from './personal/personal.module.js';
 import { SolicitacoesModule } from './solicitacoes/solicitacoes.module.js';
+import { AppAlunoModule } from './app-aluno/app-aluno.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SolicitacoesModule } from './solicitacoes/solicitacoes.module.js';
     FichasModule,
     SessoesTreinoModule,
     SolicitacoesModule,
+    AppAlunoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
