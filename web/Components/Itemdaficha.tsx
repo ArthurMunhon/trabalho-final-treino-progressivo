@@ -117,14 +117,14 @@ export default function ItemDaFicha({
                 {cardio ? (
                     <>
                         <Campo rotulo="Tempo (min)" valor={item.duracao} onChange={(v) => onMudar("duracao", v)} min={1} max={300} />
-                        <Campo rotulo="Velocidade (km/h)" valor={item.velocidade} onChange={(v) => onMudar("velocidade", v)} min={0} max={40} passo="0.1" decimal dica="opcional" />
+                        <Campo rotulo="Velocidade (km/h)" valor={item.velocidade} onChange={(v) => onMudar("velocidade", v)} min={0} max={40} passo="2" decimal dica="opcional" />
                         <Campo rotulo="Inclinação (%)" valor={item.inclinacao} onChange={(v) => onMudar("inclinacao", v)} min={0} max={40} passo="0.5" decimal dica="opcional" />
                     </>
                 ) : (
                     <>
                         <Campo rotulo="Séries" valor={item.series} onChange={(v) => onMudar("series", v)} min={1} max={20} />
                         <Campo rotulo="Repetições" valor={item.repeticoes} onChange={(v) => onMudar("repeticoes", v)} min={1} max={100} />
-                        <Campo rotulo="Carga (kg)" valor={item.carga} onChange={(v) => onMudar("carga", v)} min={0} max={1000} passo="0.5" decimal />
+                        <Campo rotulo="Carga (kg)" valor={item.carga} onChange={(v) => onMudar("carga", v)} min={0} max={1000} passo="5" decimal />
                     </>
                 )}
             </div>

@@ -8,7 +8,7 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import type { Exercicio } from "@/lib/exercicios";
-import type { Aluno } from "@/lib/alunos";
+import type { Aluno } from "@/app/alunos/alunos";
 import { tipoDoExercicio } from "@/lib/tipos-ficha";
 import type { CampoNumerico, ItemNaTela, ItemParaSalvar, TipoExercicio } from "@/lib/tipos-ficha";
 import { salvarFicha } from "@/app/treinos/acoes";

@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import PainelAlunos from "@/Components/Painelalunos";
 import { enderecoDaPagina } from "@/Components/Paginacao";
 import type { AlunoCardProps } from "@/Components/AlunoCard";
-import { listarAlunos } from "@/lib/alunos";
+import { listarAlunos } from "./alunos";
+import SolicitacoesPendentes from "@/Components/SolicitacoesPendentes";
+import { listarSolicitacoes } from "./solicitacoes";
 
 export const metadata: Metadata = {
     title: "Alunos",
@@ -43,6 +45,9 @@ export default async function Page({ searchParams }: PageProps<"/alunos">) {
         busca: termo,
     });
 
+    // Dentro do Page: roda a cada visita (fora dele rodava só uma vez)
+    const solicitacoes = await listarSolicitacoes();
+
     // O back-end devolve só { dados, total, page, limit }, sem totalDePaginas.
     // Então calculamos aqui: 15 alunos / 9 por página = 2 páginas.
     const totalDePaginas = Math.max(1, Math.ceil(resultado.total / POR_PAGINA));
@@ -59,6 +64,9 @@ export default async function Page({ searchParams }: PageProps<"/alunos">) {
             <h1 className="text-2xl font-semibold">Alunos</h1>
 
             <div className="mt-4 space-y-4">
+                {/* Pedidos de alunos (só aparece se houver) */}
+                <SolicitacoesPendentes solicitacoes={solicitacoes} />
+
                 <p className="text-sm opacity-80">
                     {resultado.total === 0
                         ? "Nenhum aluno encontrado"

@@ -4,7 +4,7 @@
 
 import type { Metadata } from "next";
 import ConstrutorFicha from "@/Components/Construtorficha";
-import { listarAlunos } from "@/lib/alunos";
+import { listarAlunos } from "@/app/alunos/alunos";
 import { listarExercicios } from "@/lib/exercicios";
 
 export const metadata: Metadata = {

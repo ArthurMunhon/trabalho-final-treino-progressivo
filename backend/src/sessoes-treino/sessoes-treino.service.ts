@@ -190,10 +190,14 @@ export class SessoesTreinoService {
 
     for (const [itemFichaId, series] of seriesPorItem) {
       const item = sessao.ficha.itens.find((i) => i.id === itemFichaId);
-      if (!item) continue;
+      // Cardio (ou item sem carga) não tem progressão de carga: pula
+      if (!item || item.tipo === 'cardio' || item.cargaSugerida === null)
+        continue;
 
       const metaCumprida = series.filter(
-        (s) => s.repeticoesFeitas >= item.repeticoesAlvo,
+        (s) =>
+          item.repeticoesAlvo === null ||
+          s.repeticoesFeitas >= item.repeticoesAlvo,
       ).length;
       const abaixoDaMeta = series.length - metaCumprida;
       const ultimaSerie = series.reduce((a, b) =>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { criarFichaComItens } from "@/lib/montar-ficha";
 import type { FichaParaSalvar, ItemParaSalvar, ResultadoSalvar } from "@/lib/tipos-ficha";
 
@@ -85,4 +86,4 @@ export async function salvarFicha(dados: FichaParaSalvar): Promise<ResultadoSalv
     const resultado = await criarFichaComItens({ alunoId: dados.alunoId, itens });
     if (resultado.ok) revalidatePath("/alunos"); // atualiza o que depender das fichas
     return resultado;
-}
+};

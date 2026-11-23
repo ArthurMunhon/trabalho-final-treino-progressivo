@@ -8,6 +8,7 @@ import { AlunosModule } from './alunos/alunos.module.js';
 import { FichasModule } from './fichas/fichas.module.js';
 import { SessoesTreinoModule } from './sessoes-treino/sessoes-treino.module.js';
 import { PersonalModule } from './personal/personal.module.js';
+import { SolicitacoesModule } from './solicitacoes/solicitacoes.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PersonalModule } from './personal/personal.module.js';
     AlunosModule,
     FichasModule,
     SessoesTreinoModule,
+    SolicitacoesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

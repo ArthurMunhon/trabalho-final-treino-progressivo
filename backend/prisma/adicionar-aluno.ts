@@ -13,7 +13,7 @@ async function main() {
   // troque pelo e-mail com que você criou a conta de personal
   const personal = await prisma.personal.findUniqueOrThrow({
     //adicionar email do personal!!
-    where: { email: 'oothavio23@gmail.com' },
+    where: { email: 'carlos@fittrack.com' },
   });
 
   const senhaHash = await hash('123456', 10);
