@@ -1,0 +1,43 @@
+@baseUrl = http://localhost:3001
+
+###############################################
+# LOGIN FALSO DO APP MOBILE (sem token, só o e-mail)
+###############################################
+
+### Aluno existe (200). Devolve id, nome, email e personalId
+POST {{baseUrl}}/app/login
+Content-Type: application/json
+
+{
+  "email": "marcos@exemplo.com"
+}
+
+### Espaços e maiúsculas são normalizados (200)
+POST {{baseUrl}}/app/login
+Content-Type: application/json
+
+{
+  "email": "  Marcos@Exemplo.com "
+}
+
+### Aluno não existe (404): "Aluno não encontrado"
+POST {{baseUrl}}/app/login
+Content-Type: application/json
+
+{
+  "email": "ninguem@exemplo.com"
+}
+
+### E-mail inválido (400): erro de validação do DTO
+POST {{baseUrl}}/app/login
+Content-Type: application/json
+
+{
+  "email": "abc"
+}
+
+### Sem corpo (400)
+POST {{baseUrl}}/app/login
+Content-Type: application/json
+
+{}
