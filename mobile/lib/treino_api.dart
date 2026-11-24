@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:treino_progressivo/models/aluno.dart';
+import 'models/ficha.dart';
+
 
 // Emulador Android: 10.0.2.2 é o localhost do PC.
 // Trocar sem mexer no código: flutter run --dart-define=API_URL=http://...
@@ -72,30 +74,62 @@ class TreinoApi {
     }
   }
 
+  Future<Ficha?> buscarFicha(Aluno aluno) async {
+    final json = await _getJson('/fichas', {'alunoId': aluno.id});
+    try {
+      return switch (json) {
+        {'dados': final List<Object?> dados} =>
+        dados.isEmpty ? null : Ficha.fromJson(dados.first, aluno),
+        _ => throw const RespostaInesperada(),
+      };
+    } on FormatException {
+      throw const RespostaInesperada();
+    } on ArgumentError {
+      throw const RespostaInesperada();
+    }
+  }
+
   // Faz o POST e traduz qualquer problema para uma FalhaDaApi
   Future<Object?> _postJson(String caminho, Map<String, Object?> corpo) async {
-    final http.Response resposta;
     try {
-      resposta = await _cliente
+      final resposta = await _cliente
           .post(
-            base.replace(path: caminho),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode(corpo),
-          )
+        base.replace(path: caminho),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(corpo),
+      )
           .timeout(limite);
+      return _tratar(resposta);
     } on TimeoutException {
       throw const TempoEsgotado();
     } on http.ClientException {
       throw const SemConexao();
     }
+  }
 
+  Future<Object?> _getJson(String caminho, Map<String, String> query) async {
+    try {
+      final resposta = await _cliente
+          .get(
+        base.replace(path: caminho, queryParameters: query),
+        headers: {'Accept': 'application/json'},
+      )
+          .timeout(limite);
+      return _tratar(resposta);
+    } on TimeoutException {
+      throw const TempoEsgotado();
+    } on http.ClientException {
+      throw const SemConexao();
+    }
+  }
+
+  Object? _tratar(http.Response resposta) {
     if (resposta.statusCode < 200 || resposta.statusCode > 299) {
       throw ErroDaApi(resposta.statusCode, _detalhesDoErro(resposta));
     }
-
     try {
       return jsonDecode(utf8.decode(resposta.bodyBytes));
     } on FormatException {
