@@ -5,7 +5,7 @@ import PainelAlunos from "@/Components/Painelalunos";
 import { enderecoDaPagina } from "@/Components/Paginacao";
 import type { AlunoCardProps } from "@/Components/AlunoCard";
 import { listarAlunos } from "./alunos";
-import SolicitacoesPendentes from "@/Components/SolicitacoesPendentes";
+import Solicitacoespendentes from "@/Components/Solicitacoespendentes";
 import { listarSolicitacoes } from "./solicitacoes";
 
 export const metadata: Metadata = {
@@ -65,7 +65,7 @@ export default async function Page({ searchParams }: PageProps<"/alunos">) {
 
             <div className="mt-4 space-y-4">
                 {/* Pedidos de alunos (só aparece se houver) */}
-                <SolicitacoesPendentes solicitacoes={solicitacoes} />
+                <Solicitacoespendentes solicitacoes={solicitacoes} />
 
                 <p className="text-sm opacity-80">
                     {resultado.total === 0

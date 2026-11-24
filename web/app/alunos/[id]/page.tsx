@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import BotaoExcluirAluno from "@/Components/BotaoExcluirAluno";
+import BotaoExcluir from "@/Components/BotaoExcluir";
 import { buscarAluno } from "@/app/alunos/alunos";
 // No Next 16, params e searchParams são Promises: precisa do await
 export default async function Page({
@@ -52,7 +52,7 @@ export default async function Page({
                 )}
 
                 <div className="mt-6 border-t border-zinc-200 pt-4">
-                    <BotaoExcluirAluno id={aluno.id} />
+                    <BotaoExcluir id={aluno.id} />
                 </div>
             </div>
         </div>

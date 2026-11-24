@@ -4,7 +4,7 @@
 import { aceitar, recusar } from "@/app/alunos/acoes";
 import type { Solicitacao } from "@/app/alunos/solicitacoes";
 
-export default function SolicitacoesPendentes({
+export default function Solicitacoespendentes({
                                                   solicitacoes,
                                               }: {
     solicitacoes: Solicitacao[];

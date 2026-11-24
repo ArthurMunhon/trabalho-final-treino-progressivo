@@ -26,7 +26,10 @@ function validarItem(dto: CreateItemFichaDto) {
   }
 }
 
-const COM_ITENS = { itens: { include: { exercicio: true } } } as const;
+// Itens sempre na ordem em que o personal montou a ficha
+const COM_ITENS = {
+  itens: { include: { exercicio: true }, orderBy: { ordem: 'asc' } },
+} as const;
 
 @Injectable()
 export class FichasService {
@@ -41,6 +44,8 @@ export class FichasService {
       this.prisma.ficha.findMany({
         where,
         include: COM_ITENS,
+        // Mais antigas primeiro: a 1ª ficha cai na segunda, a 2ª na terça...
+        orderBy: { createdAt: 'asc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -149,7 +154,11 @@ export class FichasService {
       );
     }
 
-    await this.prisma.ficha.delete({ where: { id } });
+    // Os itens não têm cascade no schema: apaga os itens e a ficha juntos (tudo ou nada)
+    await this.prisma.$transaction([
+      this.prisma.item_Ficha.deleteMany({ where: { fichaId: id } }),
+      this.prisma.ficha.delete({ where: { id } }),
+    ]);
   }
 
   async addItem(fichaId: string, dto: CreateItemFichaDto) {
