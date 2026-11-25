@@ -59,7 +59,17 @@ class _SemanaScreenState extends State<SemanaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Semana de ${widget.aluno.nome}')),
+      appBar: AppBar(
+        title: Text('Semana de ${widget.aluno.nome}'),
+        actions: [
+          // Busca as fichas de novo (ex.: o personal acabou de mudar no web)
+          IconButton(
+            onPressed: _carregando ? null : _carregar,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Recarregar',
+          ),
+        ],
+      ),
       body: _corpo(),
     );
   }
