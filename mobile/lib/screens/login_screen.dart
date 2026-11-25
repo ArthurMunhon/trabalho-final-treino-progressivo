@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:treino_progressivo/screens/ficha_screen.dart';
+import 'package:treino_progressivo/screens/semana_screen.dart';
 import 'package:treino_progressivo/treino_api.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // pushReplacement: o botão voltar não retorna para o login
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => FichaScreen(api: widget.api, aluno: aluno)),
+        MaterialPageRoute(builder: (_) => SemanaScreen(api: widget.api, aluno: aluno)),
       );
     } on FalhaDaApi catch (falha) {
       if (!mounted) return;

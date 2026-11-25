@@ -74,12 +74,15 @@ class TreinoApi {
     }
   }
 
-  Future<Ficha?> buscarFicha(Aluno aluno) async {
-    final json = await _getJson('/fichas', {'alunoId': aluno.id});
+  // GET /fichas?alunoId=: todas as fichas do aluno, na ordem da semana.
+  // O backend devolve da mais antiga para a mais nova: a 1ª é a de segunda,
+  // a 2ª a de terça... a 7ª a de domingo (por isso o limite de 7).
+  Future<List<Ficha>> buscarFichas(Aluno aluno) async {
+    final json = await _getJson('/fichas', {'alunoId': aluno.id, 'limit': '7'});
     try {
       return switch (json) {
         {'dados': final List<Object?> dados} =>
-        dados.isEmpty ? null : Ficha.fromJson(dados.first, aluno),
+        [for (final ficha in dados) Ficha.fromJson(ficha, aluno)],
         _ => throw const RespostaInesperada(),
       };
     } on FormatException {
