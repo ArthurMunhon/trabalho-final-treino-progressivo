@@ -1,20 +1,18 @@
 # Documento de Visão
 
-> **Instruções:** Preencha todas as seções abaixo. Remova os blocos `> instrução` após preenchê-los. Este documento deve ser entregue ao final da **Etapa 0** e pode ser revisado até a Etapa 1.
-
 ---
 
 ## Identificação
 
 | Campo | Valor |
 |---|---|
-| **Nome do projeto** | Treino_Progressivo |
+| **Nome do projeto** | Treino Progressivo |
 | **Grupo** | 2 |
-| **Integrantes** | Arthur Munhon,  |
+| **Integrantes** | Arthur Munhon, Othavio Pedretti |
 | **Disciplina** | Programação Web e Mobile |
 | **Data de criação** | 01/09/26 |
-| **Última atualização** |  |
-| **Versão** | 1.0 |
+| **Última atualização** | 23/11/26 |
+| **Versão** | 1.1 |
 
 ---
 
@@ -22,31 +20,36 @@
 
 ### 1.1 Propósito do documento
 
-> Descreva em 2–3 frases o que este documento cobre e para quem ele é destinado.
-
-_(Exemplo: Este documento descreve a visão do produto X, seu contexto de negócio, os principais usuários e o escopo de alto nível. Destina-se ao professor orientador e serve como base para o PRD.)_
+Este documento descreve a visão do Treino Progressivo: o problema que ele resolve, quem o usa, o que está e o que não está no escopo, e por que o produto tem um cliente web e um aplicativo mobile. Destina-se ao professor orientador e ao grupo, e serve de base para o PRD (`docs/prd.md`).
 
 ### 1.2 Escopo do produto
 
-> Defina o que o sistema faz e o que ele **não** faz. Seja objetivo.
-
 **O sistema irá:**
-- 
-- 
-- 
+- Permitir que o personal trainer mantenha um catálogo de exercícios, cadastre seus alunos e monte fichas de treino com exercícios de força e de cardio
+- Permitir que o aluno consulte a ficha no celular, execute o treino registrando carga e repetições de cada série e finalize a sessão
+- Recalcular automaticamente a carga sugerida de cada exercício de força ao final da sessão (sobrecarga progressiva)
+- Permitir que o aluno sem personal peça atendimento a um personal, e que o personal aceite ou recuse esse pedido
+- Mostrar ao personal a evolução de carga de um aluno em cada exercício
 
 **O sistema não irá (fora do escopo):**
-- 
-- 
+- Cobrar mensalidade, agendar horários ou controlar a frequência na academia
+- Prescrever treino automaticamente — quem monta a ficha é sempre o personal
+- Enviar notificações push
+- Permitir que um aluno tenha mais de um personal ao mesmo tempo
+- Calcular progressão automática para exercícios de cardio
 
 ### 1.3 Definições e siglas
 
-> Liste termos do domínio que precisam de definição para quem lê o documento.
-
 | Termo | Definição |
 |---|---|
-| | |
-| | |
+| Personal | Personal trainer: profissional que prescreve e acompanha o treino dos alunos |
+| Ficha | Lista ordenada de exercícios prescrita pelo personal para um aluno |
+| Item da ficha | Um exercício dentro da ficha, com a meta: séries, repetições e carga (força) ou duração, velocidade e inclinação (cardio) |
+| Série | Uma execução contínua de um exercício de força, com uma carga e um número de repetições |
+| Carga sugerida | Peso (kg) que o sistema recomenda para a próxima vez em que o aluno fizer aquele exercício |
+| Sobrecarga progressiva | Princípio de aumentar a carga gradualmente conforme o aluno evolui; no sistema, ±5% calculados ao finalizar a sessão |
+| Sessão de treino | Uma execução da ficha pelo aluno em uma data, do início à finalização |
+| Solicitação | Pedido de um aluno sem personal para ser atendido por um personal específico |
 
 ---
 
@@ -54,68 +57,59 @@ _(Exemplo: Este documento descreve a visão do produto X, seu contexto de negóc
 
 ### 2.1 Declaração do problema
 
-> Preencha o quadro abaixo descrevendo o problema que motiva o sistema.
-
 | Campo | Descrição |
 |---|---|
-| **O problema de** | _(qual problema existe)_ |
-| **Afeta** | _(quem sofre com esse problema)_ |
-| **Cujo impacto é** | _(quais consequências esse problema gera)_ |
-| **Uma solução adequada seria** | _(como o sistema proposto resolve isso)_ |
+| **O problema de** | controlar a evolução de carga dos alunos em planilhas, papel ou de memória |
+| **Afeta** | personal trainers autônomos e os alunos que eles atendem |
+| **Cujo impacto é** | histórico de carga perdido, ajuste de carga feito "no chute" e aluno que repete ou reduz o peso sem perceber que já tinha evoluído |
+| **Uma solução adequada seria** | um sistema em que o personal monta a ficha, o aluno registra cada série no celular durante o treino, e a carga da próxima vez é calculada automaticamente a partir do que foi registrado |
 
 ### 2.2 Declaração de posição do produto
 
-> Complete as lacunas abaixo.
-
-- **Para** _(público-alvo)_
-- **Que** _(necessidade ou oportunidade)_
-- **O** _(nome do produto)_
-- **É** _(categoria do produto)_
-- **Que** _(benefício principal)_
-- **Diferente de** _(alternativa existente ou processo manual atual)_
-- **Nosso produto** _(principal diferencial)_
+- **Para** personal trainers autônomos e seus alunos
+- **Que** precisam saber, a cada treino, qual carga usar e se o aluno está evoluindo
+- **O** Treino Progressivo
+- **É** um sistema de prescrição e acompanhamento de treino, com cliente web e aplicativo mobile
+- **Que** registra o treino no momento em que ele acontece e calcula a carga sugerida da próxima sessão
+- **Diferente de** planilhas, cadernos e mensagens trocadas entre personal e aluno
+- **Nosso produto** aplica a sobrecarga progressiva automaticamente, com uma regra única no servidor, e separa o trabalho de planejamento (web) do registro durante o treino (mobile)
 
 ---
 
 ## 3. Partes interessadas
 
-> Liste todos os envolvidos — usuários diretos, gestores, sistemas externos. Pelo menos 2.
-
 | Parte interessada | Papel | Interesse no sistema |
 |---|---|---|
-| | | |
-| | | |
-| | | |
+| Personal trainer | Usuário do cliente web | Montar fichas rapidamente, organizar os alunos e acompanhar a evolução de cada um |
+| Aluno | Usuário do aplicativo mobile | Saber o treino do dia e a carga a usar, registrar as séries com poucos toques e encontrar um personal |
+| Professor da disciplina | Cliente e avaliador | Um produto que justifique os dois clientes, com regra de negócio no backend e contrato de API mantido |
+| Grupo (Arthur e Othavio) | Desenvolvedores | Entregar backend, web e mobile integrados dentro do prazo das etapas |
 
 ---
 
 ## 4. Descrição dos usuários
 
-> Para cada perfil de usuário, preencha uma subseção. Mínimo de 2 perfis.
->
-> A coluna **Contexto de uso** é decisiva neste projeto: é dela que sai a justificativa para existirem dois clientes. Descreva onde a pessoa está e o que tem em mãos quando usa o sistema.
-
-### 4.1 Perfil: _(nome do perfil, ex: Atendente)_
+### 4.1 Perfil: Personal trainer
 
 | Campo | Descrição |
 |---|---|
-| **Descrição** | |
-| **Responsabilidades** | |
-| **Contexto de uso** | _(sentado à mesa? em movimento? em campo, com as mãos ocupadas?)_ |
-| **Nível técnico** | _(básico / intermediário / avançado)_ |
-| **Frequência de uso** | _(diário / semanal / eventual)_ |
-| **Principal necessidade** | |
+| **Descrição** | Profissional de educação física que atende vários alunos ao mesmo tempo |
+| **Responsabilidades** | Manter o catálogo de exercícios, cadastrar alunos, aceitar novos alunos, montar e ajustar fichas, acompanhar a evolução |
+| **Contexto de uso** | Sentado, em casa ou no escritório, no computador, com tempo para revisar dados de vários alunos |
+| **Nível técnico** | Intermediário |
+| **Frequência de uso** | Semanal (montagem e revisão de fichas) e eventual (novos alunos) |
+| **Principal necessidade** | Visão de conjunto: montar fichas com vários exercícios e enxergar quem está evoluindo ou estagnado |
 
-### 4.2 Perfil: _(nome do perfil)_
+### 4.2 Perfil: Aluno
 
 | Campo | Descrição |
 |---|---|
-| **Descrição** | |
-| **Responsabilidades** | |
-| **Contexto de uso** | |
-| **Nível técnico** | |
-| **Frequência de uso** | |
-| **Principal necessidade** | |
+| **Descrição** | Pessoa que treina na academia seguindo a ficha do personal |
+| **Responsabilidades** | Executar o treino, registrar carga e repetições de cada série, finalizar a sessão, pedir atendimento a um personal quando ainda não tem um |
+| **Contexto de uso** | Em pé, na academia, com o celular em uma mão entre uma série e outra, pouco tempo e às vezes conexão instável |
+| **Nível técnico** | Básico |
+| **Frequência de uso** | Diário, em todo dia de treino |
+| **Principal necessidade** | Ver o treino do dia com a carga já sugerida e registrar cada série em poucos toques |
 
 ---
 
@@ -123,72 +117,65 @@ _(Exemplo: Este documento descreve a visão do produto X, seu contexto de negóc
 
 ### 5.1 Perspectiva do produto
 
-> Descreva como o sistema se encaixa no contexto mais amplo. É um sistema independente? Substitui algum processo manual? Integra com algum outro sistema?
+É um sistema independente, que substitui o controle manual (planilhas, cadernos e mensagens) usado hoje por personals autônomos. Tem três componentes: uma API REST (NestJS + PostgreSQL) que concentra toda a regra de negócio, um cliente web (Next.js) para o personal e um aplicativo mobile (Flutter) para o aluno. Não integra com sistemas externos.
 
 ### 5.2 Por que dois clientes
 
-> **Esta seção é obrigatória.** Argumente por que o domínio escolhido justifica um cliente web **e** um aplicativo mobile. Um projeto em que os dois clientes fariam exatamente a mesma coisa não atende ao objetivo do trabalho.
+**O que acontece na tela grande, e por quê:** o trabalho do personal — cadastro de exercícios e alunos, montagem e edição de fichas, decisão sobre solicitações e análise da evolução de carga. São tarefas de planejamento, feitas sentado, que exigem ver muitos dados ao mesmo tempo (vários exercícios com ordem e metas, vários alunos, um gráfico ao longo de semanas).
 
-**O que acontece na tela grande, e por quê:**
+**O que acontece no celular, e por quê:** o treino do aluno — ver a ficha do dia, iniciar a sessão, registrar carga e repetições série a série e finalizar. Isso só faz sentido na academia, com o celular na mão entre séries; nenhum aluno leva um computador para a academia. Também é pelo celular que o aluno pede atendimento a um personal.
 
-**O que acontece no celular, e por quê:**
-
-**O que faz sentido existir nos dois:**
-
-> Este raciocínio será detalhado no PRD como o "recorte web/mobile". Aqui basta o argumento de produto — o detalhamento funcional vem depois.
+**O que faz sentido existir nos dois:** a consulta da ficha (o aluno para treinar, o personal para revisar o que montou) e o fluxo de solicitação, que começa no celular (o aluno pede) e termina no web (o personal decide).
 
 ### 5.3 Capacidades principais
 
-> Liste as grandes funcionalidades do sistema em alto nível, sem detalhar requisitos. Cada item aqui vira um épico no PRD. Indique em qual cliente a capacidade se manifesta principalmente.
-
 | # | Capacidade | Descrição resumida | Cliente principal |
 |---|---|---|---|
-| C01 | | | _(web / mobile / ambos)_ |
-| C02 | | | |
-| C03 | | | |
-| C04 | | | |
+| C01 | Gestão de alunos e catálogo | Cadastro de exercícios e de alunos pelo personal | web |
+| C02 | Montagem de fichas | Fichas com itens de força e cardio, do catálogo ou com nome personalizado | web |
+| C03 | Execução de treino | Iniciar sessão, registrar séries e finalizar | mobile |
+| C04 | Sobrecarga progressiva | Recálculo automático da carga sugerida ao finalizar a sessão | backend (resultado visto nos dois) |
+| C05 | Solicitações de atendimento | Aluno pede atendimento a um personal; personal aceita ou recusa | ambos |
+| C06 | Acompanhamento da evolução | Histórico de carga por exercício (web) e das últimas sessões (mobile) | ambos |
 
 ### 5.4 Suposições e dependências
 
-> O que precisa ser verdade para o sistema funcionar? O que está fora do controle do projeto?
-
 **Suposições:**
-- 
-- 
+- O aluno tem um smartphone Android e acesso à internet na academia, ainda que instável
+- O personal usa um computador para planejar os treinos
+- A regra de ±5% de sobrecarga progressiva é adequada para todos os exercícios de força do MVP
 
 **Dependências:**
-- 
-- 
+- PostgreSQL 18 acessível pela `DATABASE_URL` (Docker Compose no desenvolvimento)
+- Backend no ar para os dois clientes funcionarem — os clientes não acessam o banco
+- Emulador Android ou aparelho na mesma rede do backend para o app mobile
 
 ---
 
 ## 6. Restrições
 
-> Liste restrições técnicas, de prazo e de escopo que limitam as escolhas do projeto. As linhas de tecnologia já estão preenchidas — complete as demais e acrescente as que forem próprias do seu domínio.
-
 | Tipo | Restrição |
 |---|---|
-| Backend | NestJS 11 (Node 22 LTS) + Prisma 7 + PostgreSQL 18 |
-| Cliente web | React 19 + Next.js 15 com App Router |
+| Backend | NestJS + Prisma 7 + PostgreSQL 18 |
+| Cliente web | React 19 + Next.js com App Router |
 | Cliente mobile | Flutter 3 / Dart |
-| Autenticação | JWT com guards no backend; sessão completa no cliente web; no app mobile pode ser simplificada ou simulada |
+| Autenticação | JWT com guards no backend e sessão completa no cliente web; no app mobile o login é simulado (só e-mail, sem token), conforme orientação do professor em aula |
 | Arquitetura | Regra de negócio no backend; clientes não acessam o banco |
 | Controle de versão | Repositório único do grupo no GitHub, criado a partir do repositório-modelo da disciplina |
 | Prazo | Etapas 0 a 5 conforme o calendário da turma, mais apresentação |
 | Documentação | Markdown, versionada no mesmo repositório |
-| _(adicione outras)_ | |
+| Equipe | Dois integrantes para três componentes: cada um lidera um cliente e os dois trabalham no backend |
 
 ---
 
 ## 7. Qualidade
 
-> Cite pelo menos 3 atributos de qualidade relevantes para o seu sistema e justifique a escolha. Ao menos um deles deve tratar de algo específico do contexto móvel (conectividade instável, tempo de resposta percebido, consumo de dados, uso com uma mão só).
-
 | Atributo | Relevância para este sistema |
 |---|---|
-| _(ex: Usabilidade)_ | |
-| | |
-| | |
+| Usabilidade com uma mão (mobile) | O aluno registra séries entre um exercício e outro, cansado e com pouco tempo; cada registro precisa de poucos toques |
+| Tolerância a conexão instável (mobile) | Academias costumam ter sinal fraco; o app não pode perder o que o aluno já preencheu e precisa dizer claramente se o problema é conexão, demora ou erro do servidor |
+| Consistência entre clientes | A ficha montada no web precisa aparecer igual no celular, e a carga recalculada precisa ser a mesma nos dois — por isso o cálculo fica só no backend |
+| Segurança dos dados do personal | Cada personal só vê os próprios alunos e solicitações; senhas guardadas com hash |
 
 ---
 
@@ -196,5 +183,5 @@ _(Exemplo: Este documento descreve a visão do produto X, seu contexto de negóc
 
 | Versão | Data | Autor | Descrição da alteração |
 |---|---|---|---|
-| 1.0 | | | Versão inicial |
-| | | | |
+| 1.0 | 01/09/26 | Arthur Munhon | Versão inicial (identificação) |
+| 1.1 | 23/11/26 | Arthur Munhon | Documento preenchido a partir do PRD; inclui solicitações de atendimento, itens de cardio e login simulado no mobile |
