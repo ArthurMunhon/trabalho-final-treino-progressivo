@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:treino_progressivo/models/aluno.dart';
 import 'models/ficha.dart';
+import 'models/carga_atualizada.dart';
+import 'models/item_ficha.dart';
 
 
 // Emulador Android: 10.0.2.2 é o localhost do PC.
@@ -88,6 +90,50 @@ class TreinoApi {
     } on FormatException {
       throw const RespostaInesperada();
     } on ArgumentError {
+      throw const RespostaInesperada();
+    }
+  }
+
+
+  // POST /sessoes-treino: abre a sessão do treino e devolve o id dela
+  Future<String> iniciarSessao(Ficha ficha) async {
+    final json = await _postJson('/sessoes-treino', {
+      'fichaId': ficha.id,
+      'alunoId': ficha.aluno.id,
+    });
+    return switch (json) {
+      {'id': final String id} => id,
+      _ => throw const RespostaInesperada(),
+    };
+  }
+
+  // POST /sessoes-treino/:id/series: registra uma série na sessão aberta
+  Future<void> registrarSerie(
+      String sessaoId, {
+        required ItemFicha item,
+        required int numeroSerie,
+        required double carga,
+        required int repeticoes,
+      }) async {
+    await _postJson('/sessoes-treino/$sessaoId/series', {
+      'itemFichaId': item.id,
+      'numeroSerie': numeroSerie,
+      'cargaUsada': carga,
+      'repeticoesFeitas': repeticoes,
+    });
+  }
+
+  // POST /sessoes-treino/:id/finalizar: encerra a sessão.
+  // O backend recalcula as cargas e devolve as que mudaram.
+  Future<List<CargaAtualizada>> finalizarSessao(String sessaoId) async {
+    final json = await _postJson('/sessoes-treino/$sessaoId/finalizar', const {});
+    try {
+      return switch (json) {
+        {'itensAtualizados': final List<Object?> itens} =>
+        [for (final item in itens) CargaAtualizada.fromJson(item)],
+        _ => throw const RespostaInesperada(),
+      };
+    } on FormatException {
       throw const RespostaInesperada();
     }
   }

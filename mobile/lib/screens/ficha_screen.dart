@@ -4,14 +4,22 @@ import 'package:treino_progressivo/dados/dados_mock.dart';
 import 'package:treino_progressivo/models/ficha.dart';
 import 'package:treino_progressivo/models/sessao_treino.dart';
 import 'package:treino_progressivo/screens/registrar_treino_screen.dart';
+import 'package:treino_progressivo/treino_api.dart';
 import 'package:treino_progressivo/widgets/treino_card.dart';
 
 // Ficha de um dia da semana. Recebe a ficha pronta da SemanaScreen.
 class FichaScreen extends StatefulWidget {
+
+  final TreinoApi api;
   final Ficha ficha;
   final int dia; // 1 = segunda ... 7 = domingo
 
-  const FichaScreen({super.key, required this.ficha, required this.dia});
+  const FichaScreen({
+    super.key,
+    required this.api,
+    required this.ficha,
+    required this.dia,
+  });
 
   @override
   State<FichaScreen> createState() => _FichaScreenState();
@@ -31,13 +39,14 @@ class _FichaScreenState extends State<FichaScreen> {
     final novaSessao = await Navigator.push<SessaoTreino>(
       context,
       MaterialPageRoute(
-        builder: (_) => RegistrarTreinoScreen(ficha: widget.ficha),
+        builder: (_) => RegistrarTreinoScreen(api: widget.api, ficha: widget.ficha),
       ),
     );
 
     // null = usuário voltou sem finalizar
-    if (novaSessao != null) {
-      setState(() => _sessoes.add(novaSessao));
+    if (novaSessao != null && mounted) {
+      // As cargas mudaram no banco: volta para a semana avisando que precisa recarregar
+      Navigator.pop(context, true);
     }
   }
 

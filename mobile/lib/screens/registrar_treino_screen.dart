@@ -1,13 +1,16 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:treino_progressivo/models/carga_atualizada.dart';
 import 'package:treino_progressivo/models/ficha.dart';
 import 'package:treino_progressivo/models/item_ficha.dart';
 import 'package:treino_progressivo/models/sessao_treino.dart';
+import 'package:treino_progressivo/treino_api.dart';
 
 /// Tela onde o aluno registra as séries enquanto treina.
-/// Ao finalizar, devolve a SessaoTreino com Navigator.pop.
+/// Cada série vai para a API na hora; ao finalizar, devolve a SessaoTreino com Navigator.pop.
 class RegistrarTreinoScreen extends StatefulWidget {
-  const RegistrarTreinoScreen({super.key, required this.ficha});
+  const RegistrarTreinoScreen({super.key, required this.api, required this.ficha});
 
+  final TreinoApi api;
   final Ficha ficha;
 
   @override
@@ -15,34 +18,112 @@ class RegistrarTreinoScreen extends StatefulWidget {
 }
 
 class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
-  // Séries feitas até agora, separadas por item da ficha (chave = item.id)
+  // Séries já confirmadas pela API, separadas por item da ficha (chave = item.id)
   final Map<String, List<SerieExecutada>> _seriesPorItem = {};
 
-  void _adicionarSerie(ItemFicha item, double carga, int repeticoes) {
-    setState(() {
-      final lista = _seriesPorItem.putIfAbsent(item.id, () => []);
-      lista.add(
-        SerieExecutada(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
-          itemFicha: item,
-          numeroSerie: lista.length + 1,
-          cargaUsada: carga,
-          repeticoesFeitas: repeticoes,
-        ),
-      );
-    });
+  // Id da sessão na API; fica null até a 1ª série ser registrada
+  String? _sessaoId;
+
+  // true enquanto espera a API: trava os botões para não enviar duas vezes
+  bool _enviando = false;
+
+  void _avisar(String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
-  void _finalizar() {
-    final sessao = SessaoTreino(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      aluno: widget.ficha.aluno,
-      ficha: widget.ficha,
-      data: DateTime.now(),
-      situacao: SituacaoSessao.finalizada,
-      series: _seriesPorItem.values.expand((s) => s).toList(),
+  // 40.0 vira "40" e 42.5 continua "42.5"
+  String _kg(double valor) =>
+      valor == valor.roundToDouble() ? '${valor.toInt()}' : '$valor';
+
+  // Janela com as cargas que o backend recalculou (sobrecarga progressiva)
+  Future<void> _mostrarResultado(List<CargaAtualizada> cargas) {
+    final linhas = [
+      for (final carga in cargas)
+        '${widget.ficha.itens.firstWhere((i) => i.id == carga.itemFichaId).nome}: '
+            '${_kg(carga.cargaAnterior)} kg → ${_kg(carga.cargaNova)} kg',
+    ];
+
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Treino finalizado!'),
+        content: Text(
+          linhas.isEmpty
+              ? 'Nenhuma carga mudou para o próximo treino.'
+              : 'Carga para o próximo treino:\n\n${linhas.join('\n')}',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
-    Navigator.pop(context, sessao);
+  }
+
+  Future<void> _adicionarSerie(ItemFicha item, double carga, int repeticoes) async {
+    final numeroSerie = (_seriesPorItem[item.id]?.length ?? 0) + 1;
+    setState(() => _enviando = true);
+    try {
+      // Abre a sessão na 1ª série; nas próximas reaproveita o id
+      final sessaoId = _sessaoId ??= await widget.api.iniciarSessao(widget.ficha);
+      await widget.api.registrarSerie(
+        sessaoId,
+        item: item,
+        numeroSerie: numeroSerie,
+        carga: carga,
+        repeticoes: repeticoes,
+      );
+      if (!mounted) return;
+      // Só aparece na tela depois que a API confirmou
+      setState(() {
+        _seriesPorItem.putIfAbsent(item.id, () => []).add(
+          SerieExecutada(
+            id: '$sessaoId-${item.id}-$numeroSerie',
+            itemFicha: item,
+            numeroSerie: numeroSerie,
+            cargaUsada: carga,
+            repeticoesFeitas: repeticoes,
+          ),
+        );
+      });
+    } on FalhaDaApi catch (falha) {
+      // Os campos continuam preenchidos: é só tocar de novo para reenviar
+      if (mounted) _avisar(descreverFalha(falha));
+    } finally {
+      if (mounted) setState(() => _enviando = false);
+    }
+  }
+
+  Future<void> _finalizar() async {
+    final sessaoId = _sessaoId;
+    if (sessaoId == null) {
+      _avisar('Registre pelo menos uma série antes de finalizar.');
+      return;
+    }
+
+    setState(() => _enviando = true);
+    try {
+      // O backend recalcula as cargas; o app só mostra o resultado
+      final cargas = await widget.api.finalizarSessao(sessaoId);
+      if (!mounted) return;
+      await _mostrarResultado(cargas);
+      if (!mounted) return;
+      final sessao = SessaoTreino(
+        id: sessaoId,
+        aluno: widget.ficha.aluno,
+        ficha: widget.ficha,
+        data: DateTime.now(),
+        situacao: SituacaoSessao.finalizada,
+        series: _seriesPorItem.values.expand((s) => s).toList(),
+      );
+      Navigator.pop(context, sessao);
+    } on FalhaDaApi catch (falha) {
+      if (mounted) _avisar(descreverFalha(falha));
+    } finally {
+      if (mounted) setState(() => _enviando = false);
+    }
   }
 
   @override
@@ -59,6 +140,7 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
           return _ItemRegistro(
             item: item,
             series: _seriesPorItem[item.id] ?? const [],
+            enviando: _enviando,
             onAdicionar: (carga, reps) => _adicionarSerie(item, carga, reps),
           );
         },
@@ -67,8 +149,8 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: FilledButton(
-            onPressed: _finalizar,
-            child: const Text('Finalizar treino'),
+            onPressed: _enviando ? null : _finalizar,
+            child: Text(_enviando ? 'Enviando...' : 'Finalizar treino'),
           ),
         ),
       ),
@@ -82,11 +164,13 @@ class _ItemRegistro extends StatefulWidget {
   const _ItemRegistro({
     required this.item,
     required this.series,
+    required this.enviando,
     required this.onAdicionar,
   });
 
   final ItemFicha item;
   final List<SerieExecutada> series;
+  final bool enviando;
   final void Function(double carga, int repeticoes) onAdicionar;
 
   @override
@@ -168,7 +252,7 @@ class _ItemRegistroState extends State<_ItemRegistro> {
                     ),
                   ),
                   IconButton(
-                    onPressed: _adicionar,
+                    onPressed: widget.enviando ? null : _adicionar,
                     icon: const Icon(Icons.add_circle),
                     tooltip: 'Adicionar série',
                   ),

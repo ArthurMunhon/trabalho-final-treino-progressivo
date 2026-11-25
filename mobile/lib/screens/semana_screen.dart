@@ -44,11 +44,16 @@ class _SemanaScreenState extends State<SemanaScreen> {
     }
   }
 
-  void _abrirFicha(Ficha ficha, int dia) {
-    Navigator.push(
+  Future<void> _abrirFicha(Ficha ficha, int dia) async {
+    final treinou = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => FichaScreen(ficha: ficha, dia: dia)),
+      MaterialPageRoute(
+        builder: (_) => FichaScreen(api: widget.api, ficha: ficha, dia: dia),
+      ),
     );
+
+    // true = finalizou um treino: busca de novo para pegar as cargas novas
+    if (treinou == true) _carregar();
   }
 
   @override
