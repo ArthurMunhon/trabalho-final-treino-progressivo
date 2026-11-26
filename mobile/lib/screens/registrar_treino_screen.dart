@@ -5,10 +5,19 @@ import 'package:treino_progressivo/models/item_ficha.dart';
 import 'package:treino_progressivo/models/sessao_treino.dart';
 import 'package:treino_progressivo/treino_api.dart';
 
+
+// 40.0 vira "40" e 42.5 continua "42.5"
+String formatarNumero(double valor) =>
+    valor == valor.roundToDouble() ? '${valor.toInt()}' : '$valor';
+
 /// Tela onde o aluno registra as séries enquanto treina.
 /// Cada série vai para a API na hora; ao finalizar, devolve a SessaoTreino com Navigator.pop.
 class RegistrarTreinoScreen extends StatefulWidget {
-  const RegistrarTreinoScreen({super.key, required this.api, required this.ficha});
+  const RegistrarTreinoScreen({
+    super.key,
+    required this.api,
+    required this.ficha,
+  });
 
   final TreinoApi api;
   final Ficha ficha;
@@ -31,16 +40,12 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
-  // 40.0 vira "40" e 42.5 continua "42.5"
-  String _kg(double valor) =>
-      valor == valor.roundToDouble() ? '${valor.toInt()}' : '$valor';
-
   // Janela com as cargas que o backend recalculou (sobrecarga progressiva)
   Future<void> _mostrarResultado(List<CargaAtualizada> cargas) {
     final linhas = [
       for (final carga in cargas)
         '${widget.ficha.itens.firstWhere((i) => i.id == carga.itemFichaId).nome}: '
-            '${_kg(carga.cargaAnterior)} kg → ${_kg(carga.cargaNova)} kg',
+            '${formatarNumero(carga.cargaAnterior)} kg → ${formatarNumero(carga.cargaNova)} kg',
     ];
 
     return showDialog<void>(
@@ -62,12 +67,18 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
     );
   }
 
-  Future<void> _adicionarSerie(ItemFicha item, double carga, int repeticoes) async {
+  Future<void> _adicionarSerie(
+    ItemFicha item,
+    double carga,
+    int repeticoes,
+  ) async {
     final numeroSerie = (_seriesPorItem[item.id]?.length ?? 0) + 1;
     setState(() => _enviando = true);
     try {
       // Abre a sessão na 1ª série; nas próximas reaproveita o id
-      final sessaoId = _sessaoId ??= await widget.api.iniciarSessao(widget.ficha);
+      final sessaoId = _sessaoId ??= await widget.api.iniciarSessao(
+        widget.ficha,
+      );
       await widget.api.registrarSerie(
         sessaoId,
         item: item,
@@ -78,15 +89,17 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
       if (!mounted) return;
       // Só aparece na tela depois que a API confirmou
       setState(() {
-        _seriesPorItem.putIfAbsent(item.id, () => []).add(
-          SerieExecutada(
-            id: '$sessaoId-${item.id}-$numeroSerie',
-            itemFicha: item,
-            numeroSerie: numeroSerie,
-            cargaUsada: carga,
-            repeticoesFeitas: repeticoes,
-          ),
-        );
+        _seriesPorItem
+            .putIfAbsent(item.id, () => [])
+            .add(
+              SerieExecutada(
+                id: '$sessaoId-${item.id}-$numeroSerie',
+                itemFicha: item,
+                numeroSerie: numeroSerie,
+                cargaUsada: carga,
+                repeticoesFeitas: repeticoes,
+              ),
+            );
       });
     } on FalhaDaApi catch (falha) {
       // Os campos continuam preenchidos: é só tocar de novo para reenviar
@@ -186,11 +199,25 @@ class _ItemRegistroState extends State<_ItemRegistro> {
     text: widget.item.repeticoesAlvo?.toString() ?? '',
   );
 
+  // Passo de cada toque: 2,5 kg é o menor par de anilhas comum na academia
+  static const _passoCarga = 2.5;
+  static const _passoReps = 1.0;
+
   @override
   void dispose() {
     _cargaController.dispose();
     _repsController.dispose();
     super.dispose();
+  }
+
+  // Lê o campo, soma o passo (negativo para diminuir) e escreve de volta.
+  void _ajustar(TextEditingController controller, double passo) {
+    final atual = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
+    var novo = atual + passo;
+    if (novo < 0) novo = 0; // carga/reps negativas não fazem sentido
+    // Arredonda em 2 casas: evita lixo de ponto flutuante (ex.: 24.025000000000002)
+    novo = (novo * 100).round() / 100;
+    controller.text = formatarNumero(novo);
   }
 
   void _adicionar() {
@@ -205,6 +232,37 @@ class _ItemRegistroState extends State<_ItemRegistro> {
       return;
     }
     widget.onAdicionar(carga, reps);
+  }
+
+  Widget _campoComPasso({
+    required TextEditingController controller,
+    required String rotulo,
+    required double passo,
+    required bool decimal,
+  }) {
+    return TextField(
+      controller: controller,
+      textAlign: TextAlign.center,
+      keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+      decoration: InputDecoration(
+        labelText: rotulo,
+        prefixIcon: IconButton(
+          onPressed: () => _ajustar(controller, -passo),
+          icon: const Icon(Icons.remove, size: 18),
+          visualDensity: VisualDensity.compact,
+          tooltip: 'Diminuir',
+        ),
+        suffixIcon: IconButton(
+          onPressed: () => _ajustar(controller, passo),
+          icon: const Icon(Icons.add, size: 18),
+          visualDensity: VisualDensity.compact,
+          tooltip: 'Aumentar',
+        ),
+        // O padrão é 48px de cada lado; diminuindo sobra espaço para o número
+        prefixIconConstraints: const BoxConstraints(minWidth: 36),
+        suffixIconConstraints: const BoxConstraints(minWidth: 36),
+      ),
+    );
   }
 
   @override
@@ -233,22 +291,20 @@ class _ItemRegistroState extends State<_ItemRegistro> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: _campoComPasso(
                       controller: _cargaController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: 'Carga (kg)',
-                      ),
+                      rotulo: 'Carga (kg)',
+                      passo: _passoCarga,
+                      decimal: true,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: TextField(
+                    child: _campoComPasso(
                       controller: _repsController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Reps'),
+                      rotulo: 'Reps',
+                      passo: _passoReps,
+                      decimal: false,
                     ),
                   ),
                   IconButton(
