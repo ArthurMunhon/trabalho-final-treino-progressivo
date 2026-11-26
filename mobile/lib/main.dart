@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:treino_progressivo/screens/login_screen.dart';
 import 'package:treino_progressivo/treino_api.dart';
+import 'package:treino_progressivo/tema.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: LoginScreen(api: api));
+    return MaterialApp(
+      title: 'FitTrack',
+      theme: criarTemaEscuro(),
+      home: LoginScreen(api: api),
+    );
   }
 }
