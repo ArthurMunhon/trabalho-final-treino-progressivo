@@ -5,13 +5,10 @@ import 'package:treino_progressivo/models/item_ficha.dart';
 import 'package:treino_progressivo/models/sessao_treino.dart';
 import 'package:treino_progressivo/treino_api.dart';
 
-
-// 40.0 vira "40" e 42.5 continua "42.5"
+// tira o .0 quando o número é inteiro (40.0 fica 40)
 String formatarNumero(double valor) =>
     valor == valor.roundToDouble() ? '${valor.toInt()}' : '$valor';
 
-/// Tela onde o aluno registra as séries enquanto treina.
-/// Cada série vai para a API na hora; ao finalizar, devolve a SessaoTreino com Navigator.pop.
 class RegistrarTreinoScreen extends StatefulWidget {
   const RegistrarTreinoScreen({
     super.key,
@@ -27,20 +24,42 @@ class RegistrarTreinoScreen extends StatefulWidget {
 }
 
 class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
-  // Séries já confirmadas pela API, separadas por item da ficha (chave = item.id)
   final Map<String, List<SerieExecutada>> _seriesPorItem = {};
 
-  // Id da sessão na API; fica null até a 1ª série ser registrada
   String? _sessaoId;
 
-  // true enquanto espera a API: trava os botões para não enviar duas vezes
-  bool _enviando = false;
+  bool _enviando = true;
 
   void _avisar(String texto) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
-  // Janela com as cargas que o backend recalculou (sobrecarga progressiva)
+  @override
+  void initState() {
+    super.initState();
+    _retomarSessao();
+  }
+
+  // se o aluno saiu no meio do treino a sessão ficou aberta na API,
+  // então continua ela em vez de criar outra (senão o backend dá 409)
+  Future<void> _retomarSessao() async {
+    try {
+      final sessao = await widget.api.buscarSessaoEmAndamento(widget.ficha);
+      if (sessao == null || !mounted) return;
+      setState(() {
+        _sessaoId = sessao.id;
+        for (final serie in sessao.series) {
+          _seriesPorItem.putIfAbsent(serie.itemFicha.id, () => []).add(serie);
+        }
+      });
+      _avisar('Continuando o treino que ficou aberto');
+    } on FalhaDaApi catch (falha) {
+      if (mounted) _avisar(descreverFalha(falha));
+    } finally {
+      if (mounted) setState(() => _enviando = false);
+    }
+  }
+
   Future<void> _mostrarResultado(List<CargaAtualizada> cargas) {
     final linhas = [
       for (final carga in cargas)
@@ -75,7 +94,7 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
     final numeroSerie = (_seriesPorItem[item.id]?.length ?? 0) + 1;
     setState(() => _enviando = true);
     try {
-      // Abre a sessão na 1ª série; nas próximas reaproveita o id
+      // a sessão só é criada na primeira série, depois usa o mesmo id
       final sessaoId = _sessaoId ??= await widget.api.iniciarSessao(
         widget.ficha,
       );
@@ -87,7 +106,6 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
         repeticoes: repeticoes,
       );
       if (!mounted) return;
-      // Só aparece na tela depois que a API confirmou
       setState(() {
         _seriesPorItem
             .putIfAbsent(item.id, () => [])
@@ -102,7 +120,6 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
             );
       });
     } on FalhaDaApi catch (falha) {
-      // Os campos continuam preenchidos: é só tocar de novo para reenviar
       if (mounted) _avisar(descreverFalha(falha));
     } finally {
       if (mounted) setState(() => _enviando = false);
@@ -118,7 +135,6 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
 
     setState(() => _enviando = true);
     try {
-      // O backend recalcula as cargas; o app só mostra o resultado
       final cargas = await widget.api.finalizarSessao(sessaoId);
       if (!mounted) return;
       await _mostrarResultado(cargas);
@@ -171,8 +187,6 @@ class _RegistrarTreinoScreenState extends State<RegistrarTreinoScreen> {
   }
 }
 
-/// Card de um exercício: mostra o alvo, as séries feitas e os campos de entrada.
-/// É Stateful só para guardar os controllers dos campos.
 class _ItemRegistro extends StatefulWidget {
   const _ItemRegistro({
     required this.item,
@@ -191,7 +205,6 @@ class _ItemRegistro extends StatefulWidget {
 }
 
 class _ItemRegistroState extends State<_ItemRegistro> {
-  // Já começam preenchidos com o alvo, o aluno só ajusta se mudou
   late final _cargaController = TextEditingController(
     text: widget.item.cargaSugerida?.toString() ?? '',
   );
@@ -199,7 +212,6 @@ class _ItemRegistroState extends State<_ItemRegistro> {
     text: widget.item.repeticoesAlvo?.toString() ?? '',
   );
 
-  // Passo de cada toque: 2,5 kg é o menor par de anilhas comum na academia
   static const _passoCarga = 2.5;
   static const _passoReps = 1.0;
 
@@ -210,18 +222,16 @@ class _ItemRegistroState extends State<_ItemRegistro> {
     super.dispose();
   }
 
-  // Lê o campo, soma o passo (negativo para diminuir) e escreve de volta.
+  // soma o passo no valor do campo (passo negativo diminui)
   void _ajustar(TextEditingController controller, double passo) {
     final atual = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
     var novo = atual + passo;
-    if (novo < 0) novo = 0; // carga/reps negativas não fazem sentido
-    // Arredonda em 2 casas: evita lixo de ponto flutuante (ex.: 24.025000000000002)
+    if (novo < 0) novo = 0;
     novo = (novo * 100).round() / 100;
     controller.text = formatarNumero(novo);
   }
 
   void _adicionar() {
-    // aceita vírgula também (ex: 42,5)
     final carga = double.tryParse(_cargaController.text.replaceAll(',', '.'));
     final reps = int.tryParse(_repsController.text);
 
@@ -258,7 +268,6 @@ class _ItemRegistroState extends State<_ItemRegistro> {
           visualDensity: VisualDensity.compact,
           tooltip: 'Aumentar',
         ),
-        // O padrão é 48px de cada lado; diminuindo sobra espaço para o número
         prefixIconConstraints: const BoxConstraints(minWidth: 36),
         suffixIconConstraints: const BoxConstraints(minWidth: 36),
       ),
@@ -285,7 +294,6 @@ class _ItemRegistroState extends State<_ItemRegistro> {
                 'Série ${serie.numeroSerie}: ${serie.cargaUsada} kg x ${serie.repeticoesFeitas}',
               ),
             ),
-            // Cardio não tem carga/repetições, então não mostra os campos
             if (!ehCardio) ...[
               const SizedBox(height: 8),
               Row(

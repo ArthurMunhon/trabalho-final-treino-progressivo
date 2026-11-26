@@ -7,42 +7,39 @@ import 'package:treino_progressivo/models/aluno.dart';
 import 'models/ficha.dart';
 import 'models/carga_atualizada.dart';
 import 'models/item_ficha.dart';
+import 'models/sessao_treino.dart';
 
-// Emulador Android: 10.0.2.2 é o localhost do PC.
-// Trocar sem mexer no código: flutter run --dart-define=API_URL=http://...
+// no emulador android o 10.0.2.2 é o localhost do pc.
+// pra trocar: flutter run --dart-define=API_URL=http://...
 const enderecoDaApi = String.fromEnvironment(
   'API_URL',
   defaultValue: 'http://10.0.2.2:3001',
 );
 
-// Toda chamada que dá errado termina em um destes casos
+// erros que podem dar ao chamar a API
 sealed class FalhaDaApi implements Exception {
   const FalhaDaApi();
 }
 
-// O pedido não chegou ou a resposta não voltou
 class SemConexao extends FalhaDaApi {
   const SemConexao();
 }
 
-// O servidor não respondeu dentro do limite
 class TempoEsgotado extends FalhaDaApi {
   const TempoEsgotado();
 }
 
-// Status fora de 2xx (ex.: 404 aluno não encontrado, 400 validação)
 class ErroDaApi extends FalhaDaApi {
   final int status;
   final List<String> detalhes;
   const ErroDaApi(this.status, this.detalhes);
 }
 
-// Status 2xx, mas o corpo veio fora do formato esperado
 class RespostaInesperada extends FalhaDaApi {
   const RespostaInesperada();
 }
 
-// Texto para mostrar ao usuário. O switch obriga a cobrir todos os casos
+// mensagem do erro pra mostrar pro usuário
 String descreverFalha(FalhaDaApi falha) {
   return switch (falha) {
     SemConexao() => 'Não foi possível conectar ao servidor.',
@@ -59,14 +56,13 @@ class TreinoApi {
   final Duration limite;
   final http.Client _cliente;
 
-  // O cliente é opcional: nos testes passamos um MockClient
   TreinoApi({
     required this.base,
     http.Client? cliente,
     this.limite = const Duration(seconds: 10),
   }) : _cliente = cliente ?? http.Client();
 
-  // POST /app/login: login falso, só pelo e-mail
+  // POST /app/login: login simulado, só com o e-mail
   Future<Aluno> login(String email) async {
     final json = await _postJson('/app/login', {'email': email});
     try {
@@ -76,9 +72,9 @@ class TreinoApi {
     }
   }
 
-  // GET /fichas?alunoId=: todas as fichas do aluno, na ordem da semana.
-  // O backend devolve da mais antiga para a mais nova: a 1ª é a de segunda,
-  // a 2ª a de terça... a 7ª a de domingo (por isso o limite de 7).
+  // GET /fichas?alunoId=...
+  // busca as fichas do aluno. o backend manda da mais antiga pra mais nova,
+  // então a 1ª é a de segunda, a 2ª a de terça... por isso o limite de 7
   Future<List<Ficha>> buscarFichas(Aluno aluno) async {
     final json = await _getJson('/fichas', {'alunoId': aluno.id, 'limit': '7'});
     try {
@@ -95,7 +91,52 @@ class TreinoApi {
     }
   }
 
-  // POST /sessoes-treino: abre a sessão do treino e devolve o id dela
+  // GET /sessoes-treino?fichaId=...
+  // procura se tem uma sessão dessa ficha que ficou em andamento
+  Future<SessaoTreino?> buscarSessaoEmAndamento(Ficha ficha) async {
+    final json = await _getJson('/sessoes-treino', {
+      'fichaId': ficha.id,
+      'limit': '100',
+    });
+    if (json case {'dados': final List<Object?> dados}) {
+      for (final sessao in dados) {
+        if (sessao case {
+          'id': final String id,
+          'situacao': 'em_andamento',
+          'data': final String data,
+          'seriesExecutadas': final List<Object?> series,
+        }) {
+          return SessaoTreino(
+            id: id,
+            aluno: ficha.aluno,
+            ficha: ficha,
+            data: DateTime.parse(data),
+            series: [
+              for (final serie in series)
+                if (serie case {
+                  'id': final String serieId,
+                  'itemFichaId': final String itemId,
+                  'numeroSerie': final int numero,
+                  'cargaUsada': final num carga,
+                  'repeticoesFeitas': final int reps,
+                })
+                  SerieExecutada(
+                    id: serieId,
+                    itemFicha: ficha.itens.firstWhere((i) => i.id == itemId),
+                    numeroSerie: numero,
+                    cargaUsada: carga.toDouble(),
+                    repeticoesFeitas: reps,
+                  ),
+            ]..sort((a, b) => a.numeroSerie.compareTo(b.numeroSerie)),
+          );
+        }
+      }
+      return null;
+    }
+    throw const RespostaInesperada();
+  }
+
+  // POST /sessoes-treino: cria a sessão e devolve o id
   Future<String> iniciarSessao(Ficha ficha) async {
     final json = await _postJson('/sessoes-treino', {
       'fichaId': ficha.id,
@@ -107,7 +148,7 @@ class TreinoApi {
     };
   }
 
-  // POST /sessoes-treino/:id/series: registra uma série na sessão aberta
+  // POST /sessoes-treino/:id/series: registra uma série
   Future<void> registrarSerie(
     String sessaoId, {
     required ItemFicha item,
@@ -123,8 +164,8 @@ class TreinoApi {
     });
   }
 
-  // POST /sessoes-treino/:id/finalizar: encerra a sessão.
-  // O backend recalcula as cargas e devolve as que mudaram.
+  // POST /sessoes-treino/:id/finalizar
+  // finaliza o treino. o backend recalcula as cargas e devolve as que mudaram
   Future<List<CargaAtualizada>> finalizarSessao(String sessaoId) async {
     final json = await _postJson(
       '/sessoes-treino/$sessaoId/finalizar',
@@ -142,7 +183,6 @@ class TreinoApi {
     }
   }
 
-  // Faz o POST e traduz qualquer problema para uma FalhaDaApi
   Future<Object?> _postJson(String caminho, Map<String, Object?> corpo) async {
     try {
       final resposta = await _cliente
@@ -190,7 +230,7 @@ class TreinoApi {
     }
   }
 
-  // O Nest devolve { "message": "..." } ou { "message": ["...", "..."] }
+  // o nest manda o message como texto ou como lista
   List<String> _detalhesDoErro(http.Response resposta) {
     try {
       return switch (jsonDecode(utf8.decode(resposta.bodyBytes))) {
