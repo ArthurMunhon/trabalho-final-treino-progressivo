@@ -40,7 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
       // pushReplacement: o botão voltar não retorna para o login
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => SemanaScreen(api: widget.api, aluno: aluno)),
+        MaterialPageRoute(
+          builder: (_) => SemanaScreen(api: widget.api, aluno: aluno),
+        ),
       );
     } on FalhaDaApi catch (falha) {
       if (!mounted) return;

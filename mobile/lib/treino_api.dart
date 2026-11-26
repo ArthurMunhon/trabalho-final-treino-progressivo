@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:treino_progressivo/models/aluno.dart';
+
 import 'models/ficha.dart';
 import 'models/carga_atualizada.dart';
 import 'models/item_ficha.dart';
-
 
 // Emulador Android: 10.0.2.2 é o localhost do PC.
 // Trocar sem mexer no código: flutter run --dart-define=API_URL=http://...
@@ -83,8 +83,9 @@ class TreinoApi {
     final json = await _getJson('/fichas', {'alunoId': aluno.id, 'limit': '7'});
     try {
       return switch (json) {
-        {'dados': final List<Object?> dados} =>
-        [for (final ficha in dados) Ficha.fromJson(ficha, aluno)],
+        {'dados': final List<Object?> dados} => [
+          for (final ficha in dados) Ficha.fromJson(ficha, aluno),
+        ],
         _ => throw const RespostaInesperada(),
       };
     } on FormatException {
@@ -93,7 +94,6 @@ class TreinoApi {
       throw const RespostaInesperada();
     }
   }
-
 
   // POST /sessoes-treino: abre a sessão do treino e devolve o id dela
   Future<String> iniciarSessao(Ficha ficha) async {
@@ -109,12 +109,12 @@ class TreinoApi {
 
   // POST /sessoes-treino/:id/series: registra uma série na sessão aberta
   Future<void> registrarSerie(
-      String sessaoId, {
-        required ItemFicha item,
-        required int numeroSerie,
-        required double carga,
-        required int repeticoes,
-      }) async {
+    String sessaoId, {
+    required ItemFicha item,
+    required int numeroSerie,
+    required double carga,
+    required int repeticoes,
+  }) async {
     await _postJson('/sessoes-treino/$sessaoId/series', {
       'itemFichaId': item.id,
       'numeroSerie': numeroSerie,
@@ -126,11 +126,15 @@ class TreinoApi {
   // POST /sessoes-treino/:id/finalizar: encerra a sessão.
   // O backend recalcula as cargas e devolve as que mudaram.
   Future<List<CargaAtualizada>> finalizarSessao(String sessaoId) async {
-    final json = await _postJson('/sessoes-treino/$sessaoId/finalizar', const {});
+    final json = await _postJson(
+      '/sessoes-treino/$sessaoId/finalizar',
+      const {},
+    );
     try {
       return switch (json) {
-        {'itensAtualizados': final List<Object?> itens} =>
-        [for (final item in itens) CargaAtualizada.fromJson(item)],
+        {'itensAtualizados': final List<Object?> itens} => [
+          for (final item in itens) CargaAtualizada.fromJson(item),
+        ],
         _ => throw const RespostaInesperada(),
       };
     } on FormatException {
@@ -143,13 +147,13 @@ class TreinoApi {
     try {
       final resposta = await _cliente
           .post(
-        base.replace(path: caminho),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(corpo),
-      )
+            base.replace(path: caminho),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(corpo),
+          )
           .timeout(limite);
       return _tratar(resposta);
     } on TimeoutException {
@@ -163,9 +167,9 @@ class TreinoApi {
     try {
       final resposta = await _cliente
           .get(
-        base.replace(path: caminho, queryParameters: query),
-        headers: {'Accept': 'application/json'},
-      )
+            base.replace(path: caminho, queryParameters: query),
+            headers: {'Accept': 'application/json'},
+          )
           .timeout(limite);
       return _tratar(resposta);
     } on TimeoutException {

@@ -12,11 +12,11 @@ class Exercicio {
   factory Exercicio.fromJson(Object? json) {
     return switch (json) {
       {
-      'id': final String id,
-      'nome': final String nome,
-      'grupoMuscular': final String grupoMuscular,
+        'id': final String id,
+        'nome': final String nome,
+        'grupoMuscular': final String grupoMuscular,
       } =>
-          Exercicio(id: id, nome: nome, grupoMuscular: grupoMuscular),
+        Exercicio(id: id, nome: nome, grupoMuscular: grupoMuscular),
       _ => throw FormatException('Exercício em formato inesperado: $json'),
     };
   }

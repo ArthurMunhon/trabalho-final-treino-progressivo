@@ -1,4 +1,3 @@
-
 import 'package:material_ui/material_ui.dart';
 import 'package:treino_progressivo/dados/dados_mock.dart';
 import 'package:treino_progressivo/models/ficha.dart';
@@ -9,7 +8,6 @@ import 'package:treino_progressivo/widgets/treino_card.dart';
 
 // Ficha de um dia da semana. Recebe a ficha pronta da SemanaScreen.
 class FichaScreen extends StatefulWidget {
-
   final TreinoApi api;
   final Ficha ficha;
   final int dia; // 1 = segunda ... 7 = domingo
@@ -30,8 +28,9 @@ class _FichaScreenState extends State<FichaScreen> {
   final List<SessaoTreino> _sessoes = [...listarSessoes()];
 
   SessaoTreino? get _ultimaSessao {
-    final daFicha = _sessoes.where((s) => s.ficha.id == widget.ficha.id).toList()
-      ..sort((a, b) => b.data.compareTo(a.data));
+    final daFicha =
+        _sessoes.where((s) => s.ficha.id == widget.ficha.id).toList()
+          ..sort((a, b) => b.data.compareTo(a.data));
     return daFicha.isEmpty ? null : daFicha.first;
   }
 
@@ -39,7 +38,8 @@ class _FichaScreenState extends State<FichaScreen> {
     final novaSessao = await Navigator.push<SessaoTreino>(
       context,
       MaterialPageRoute(
-        builder: (_) => RegistrarTreinoScreen(api: widget.api, ficha: widget.ficha),
+        builder: (_) =>
+            RegistrarTreinoScreen(api: widget.api, ficha: widget.ficha),
       ),
     );
 
@@ -61,10 +61,10 @@ class _FichaScreenState extends State<FichaScreen> {
       floatingActionButton: ficha.itens.isEmpty
           ? null
           : FloatingActionButton.extended(
-        onPressed: _abrirRegistro,
-        icon: const Icon(Icons.add),
-        label: const Text('Iniciar treino'),
-      ),
+              onPressed: _abrirRegistro,
+              icon: const Icon(Icons.add),
+              label: const Text('Iniciar treino'),
+            ),
     );
   }
 
