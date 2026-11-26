@@ -16,7 +16,7 @@
 | **Grupo** | 2 |
 | **Integrantes** | Arthur Munhon (mobile), Othavio Pedretti (web) |
 | **Repositório** | `https://github.com/ArthurMunhon/trabalho-final-treino-progressivo` |
-| **Vídeo de apresentação** | _(link após a entrega)_ |
+| **Vídeo de apresentação** | https://drive.google.com/drive/u/1/home |
 
 ---
 
@@ -399,7 +399,7 @@ A sobrecarga progressiva é calculada só no backend (`POST /sessoes-treino/:id/
 
 | Campo | Valor |
 |---|---|
-| **Link** | |
+| **Link** | https://drive.google.com/drive/u/1/home |
 | **Duração** | |
 | **Quem fala em cada parte** | |
 
