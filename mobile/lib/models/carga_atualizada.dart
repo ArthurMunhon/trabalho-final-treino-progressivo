@@ -1,5 +1,3 @@
-// Carga recalculada de um item da ficha, devolvida ao finalizar a sessão
-// (sobrecarga progressiva: o cálculo é do backend, o app só mostra)
 class CargaAtualizada {
   final String itemFichaId;
   final double cargaAnterior;
@@ -15,7 +13,7 @@ class CargaAtualizada {
     return switch (json) {
       {
         'itemFichaId': final String itemFichaId,
-        'cargaAnterior': final num cargaAnterior, // JSON manda 40, não 40.0
+        'cargaAnterior': final num cargaAnterior,
         'cargaSugeridaNova': final num cargaNova,
       } =>
         CargaAtualizada(

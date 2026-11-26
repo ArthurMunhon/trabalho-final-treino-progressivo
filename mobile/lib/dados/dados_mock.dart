@@ -4,9 +4,8 @@ import '../models/ficha.dart';
 import '../models/item_ficha.dart';
 import '../models/sessao_treino.dart';
 
-const _personalId = 'p1'; // Carlos Personal
+const _personalId = 'p1';
 
-// ---------- Exercícios (catálogo) ----------
 const _supinoReto = Exercicio(
   id: 'e1',
   nome: 'Supino reto com barra',
@@ -35,7 +34,6 @@ const List<Exercicio> _exercicios = [
   _roscaDireta,
 ];
 
-// ---------- Alunos ----------
 const _marcos = Aluno(
   id: 'a1',
   nome: 'Marcos Vinicius',
@@ -52,12 +50,11 @@ const _bruno = Aluno(
   id: 'a3',
   nome: 'Bruno Almeida',
   email: 'bruno.almeida@exemplo.com',
-  personalId: null, // ainda não aceito pelo personal
+  personalId: null,
 );
 
 const List<Aluno> _alunos = [_marcos, _ana, _bruno];
 
-// ---------- Itens de ficha ----------
 const _itemSupino = ItemFicha(
   id: 'i1',
   ordem: 1,
@@ -100,7 +97,6 @@ const _itemRosca = ItemFicha(
   cargaSugerida: 20,
 );
 
-// ---------- Fichas ----------
 const _fichaMarcos = Ficha(
   id: 'f1',
   aluno: _marcos,
@@ -116,8 +112,6 @@ const _fichaAna = Ficha(
 
 const List<Ficha> _fichas = [_fichaMarcos, _fichaAna];
 
-// ---------- Sessões de treino ----------
-// DateTime não é const, por isso a lista é final
 final List<SessaoTreino> _sessoes = [
   SessaoTreino(
     id: 's1',

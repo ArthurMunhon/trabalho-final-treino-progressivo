@@ -5,8 +5,6 @@ import 'package:treino_progressivo/screens/ficha_screen.dart';
 import 'package:treino_progressivo/treino_api.dart';
 import 'package:treino_progressivo/screens/login_screen.dart';
 
-// Semana do aluno: os 7 dias, cada um com a sua ficha ou "Repouso".
-// O aluno toca no dia que quer treinar.
 class SemanaScreen extends StatefulWidget {
   final TreinoApi api;
   final Aluno aluno;
@@ -53,12 +51,10 @@ class _SemanaScreenState extends State<SemanaScreen> {
       ),
     );
 
-    // true = finalizou um treino: busca de novo para pegar as cargas novas
     if (treinou == true) _carregar();
   }
 
-  // Login é simulado (o aluno só fica em memória): sair é só voltar
-  // para a tela de login, substituindo a semana na pilha.
+  // como o login é simulado, sair é só voltar pra tela de login
   void _sair() {
     Navigator.pushReplacement(
       context,
@@ -72,7 +68,6 @@ class _SemanaScreenState extends State<SemanaScreen> {
       appBar: AppBar(
         title: Text('Semana de ${widget.aluno.nome}'),
         actions: [
-          // Busca as fichas de novo (ex.: o personal acabou de mudar no web)
           IconButton(
             onPressed: _carregando ? null : _carregar,
             icon: const Icon(Icons.refresh),
@@ -128,7 +123,6 @@ class _SemanaScreenState extends State<SemanaScreen> {
     return RefreshIndicator(
       onRefresh: _carregar,
       child: ListView.builder(
-        // Deixa puxar para atualizar mesmo com a lista curta
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: diasDaSemana.length,
         itemBuilder: (context, index) => _dia(index + 1),
@@ -136,7 +130,6 @@ class _SemanaScreenState extends State<SemanaScreen> {
     );
   }
 
-  // Um dia da semana (1 = segunda ... 7 = domingo)
   Widget _dia(int dia) {
     final ficha = fichaDoDia(_fichas, dia);
     final nome = diasDaSemana[dia - 1];
@@ -144,7 +137,6 @@ class _SemanaScreenState extends State<SemanaScreen> {
     final cores = Theme.of(context).colorScheme;
 
     return Card(
-      // Hoje fica destacado
       color: ehHoje ? cores.primaryContainer : null,
       child: ListTile(
         title: Text(ehHoje ? '$nome (hoje)' : nome),
@@ -155,7 +147,6 @@ class _SemanaScreenState extends State<SemanaScreen> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        // Dia de repouso não abre nada
         trailing: ficha == null ? null : const Icon(Icons.chevron_right),
         onTap: ficha == null ? null : () => _abrirFicha(ficha, dia),
       ),

@@ -24,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _entrar() async {
-    // Valida o campo antes de chamar a API
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -34,10 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final aluno = await widget.api.login(_emailController.text.trim());
-      // Depois de qualquer await, a tela pode ter sido fechada
       if (!mounted) return;
 
-      // pushReplacement: o botão voltar não retorna para o login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

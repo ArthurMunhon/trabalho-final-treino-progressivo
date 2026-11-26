@@ -6,11 +6,10 @@ import 'package:treino_progressivo/screens/registrar_treino_screen.dart';
 import 'package:treino_progressivo/treino_api.dart';
 import 'package:treino_progressivo/widgets/treino_card.dart';
 
-// Ficha de um dia da semana. Recebe a ficha pronta da SemanaScreen.
 class FichaScreen extends StatefulWidget {
   final TreinoApi api;
   final Ficha ficha;
-  final int dia; // 1 = segunda ... 7 = domingo
+  final int dia;
 
   const FichaScreen({
     super.key,
@@ -24,7 +23,7 @@ class FichaScreen extends StatefulWidget {
 }
 
 class _FichaScreenState extends State<FichaScreen> {
-  // Sessões ainda vêm do mock; o registro na API é o próximo passo
+  // por enquanto o histórico ainda vem do mock
   final List<SessaoTreino> _sessoes = [...listarSessoes()];
 
   SessaoTreino? get _ultimaSessao {
@@ -43,9 +42,8 @@ class _FichaScreenState extends State<FichaScreen> {
       ),
     );
 
-    // null = usuário voltou sem finalizar
     if (novaSessao != null && mounted) {
-      // As cargas mudaram no banco: volta para a semana avisando que precisa recarregar
+      // se finalizou o treino as cargas mudaram, então a semana tem que recarregar
       Navigator.pop(context, true);
     }
   }
@@ -57,7 +55,6 @@ class _FichaScreenState extends State<FichaScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Treino de ${diasDaSemana[widget.dia - 1]}')),
       body: _corpo(ficha),
-      // Ficha sem exercício não tem o que treinar
       floatingActionButton: ficha.itens.isEmpty
           ? null
           : FloatingActionButton.extended(

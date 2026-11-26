@@ -30,10 +30,12 @@ void main() {
   });
 
   test('409 ao finalizar vira ErroDaApi com a mensagem do backend', () async {
-    final cliente = MockClient((_) async => http.Response(
-      jsonEncode({'statusCode': 409, 'message': 'Sessão sem séries'}),
-      409,
-    ));
+    final cliente = MockClient(
+      (_) async => http.Response(
+        jsonEncode({'statusCode': 409, 'message': 'Sessão sem séries'}),
+        409,
+      ),
+    );
     final api = TreinoApi(base: Uri.parse('http://teste'), cliente: cliente);
 
     expect(

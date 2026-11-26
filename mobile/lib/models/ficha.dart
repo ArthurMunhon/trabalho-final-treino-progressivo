@@ -33,7 +33,6 @@ class Ficha {
   }
 }
 
-// Nomes na ordem do DateTime.weekday: posição 0 = segunda ... 6 = domingo
 const diasDaSemana = [
   'Segunda',
   'Terça',
@@ -44,8 +43,8 @@ const diasDaSemana = [
   'Domingo',
 ];
 
-// Ficha de um dia da semana (1 = segunda ... 7 = domingo, igual ao DateTime.weekday).
-// A 1ª ficha é a de segunda, a 2ª a de terça... Sem ficha nesse dia = repouso (null).
+// pega a ficha do dia: a 1ª ficha é a de segunda, a 2ª a de terça e assim vai.
+// se não tiver ficha nesse dia é repouso (volta null)
 Ficha? fichaDoDia(List<Ficha> fichas, int diaDaSemana) {
   final posicao = diaDaSemana - 1;
   return posicao < fichas.length ? fichas[posicao] : null;

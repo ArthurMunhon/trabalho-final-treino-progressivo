@@ -17,8 +17,7 @@ class Aluno {
         'id': final String id,
         'nome': final String nome,
         'email': final String email,
-        'personalId':
-            final String? personalId, // chave obrigatória, valor pode ser null
+        'personalId': final String? personalId,
       } =>
         Aluno(id: id, nome: nome, email: email, personalId: personalId),
       _ => throw FormatException('Aluno em formato inesperado: $json'),

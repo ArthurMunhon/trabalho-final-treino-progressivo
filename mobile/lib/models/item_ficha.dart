@@ -6,18 +6,15 @@ class ItemFicha {
   final String id;
   final int ordem;
 
-  // Catálogo OU personalizado
   final Exercicio? exercicio;
   final String? nomePersonalizado;
 
   final TipoExercicio tipo;
 
-  // Força
   final int? seriesAlvo;
   final int? repeticoesAlvo;
   final double? cargaSugerida;
 
-  // Cardio
   final int? duracaoMin;
   final double? velocidadeKmh;
   final double? inclinacaoPct;
@@ -36,10 +33,9 @@ class ItemFicha {
     this.inclinacaoPct,
   });
 
-  /// Nome que aparece na tela: do catálogo ou o personalizado.
   String get nome => exercicio?.nome ?? nomePersonalizado ?? 'Exercício';
 
-  /// Meta definida pelo personal, em texto.
+  // monta o texto do alvo só com o que o personal preencheu
   String get alvo {
     if (tipo == TipoExercicio.cardio) {
       return [
@@ -60,11 +56,11 @@ class ItemFicha {
         'id': final String id,
         'ordem': final int ordem,
         'tipo': final String tipo,
-        'exercicio': final Object? exercicio, // null quando é personalizado
+        'exercicio': final Object? exercicio,
         'nomePersonalizado': final String? nomePersonalizado,
         'seriesAlvo': final int? seriesAlvo,
         'repeticoesAlvo': final int? repeticoesAlvo,
-        'cargaSugerida': final num? cargaSugerida, // JSON manda 40, não 40.0
+        'cargaSugerida': final num? cargaSugerida,
         'duracaoMin': final int? duracaoMin,
         'velocidadeKmh': final num? velocidadeKmh,
         'inclinacaoPct': final num? inclinacaoPct,
@@ -72,7 +68,7 @@ class ItemFicha {
         ItemFicha(
           id: id,
           ordem: ordem,
-          tipo: TipoExercicio.values.byName(tipo), // 'forca' | 'cardio'
+          tipo: TipoExercicio.values.byName(tipo),
           exercicio: exercicio == null ? null : Exercicio.fromJson(exercicio),
           nomePersonalizado: nomePersonalizado,
           seriesAlvo: seriesAlvo,

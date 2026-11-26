@@ -3,7 +3,6 @@ import 'package:treino_progressivo/models/aluno.dart';
 import 'package:treino_progressivo/models/ficha.dart';
 
 void main() {
-  // Aluno e fichas de mentira, só o necessário para o teste
   const aluno = Aluno(id: 'a1', nome: 'Marcos', email: 'marcos@exemplo.com');
 
   Ficha ficha(String id) =>
