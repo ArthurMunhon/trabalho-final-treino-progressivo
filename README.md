@@ -1,3 +1,59 @@
+# Treino Progressivo
+
+Trabalho final de Programação Web e Mobile (UPF) — grupo 2: **Arthur Munhon** (mobile) e **Othavio Pedretti** (web). Backend feito pelos dois.
+
+O personal trainer monta as fichas de treino no **web**; o aluno executa o treino no **mobile**, registrando série a série; ao finalizar a sessão, o **backend** recalcula a carga sugerida de cada exercício (sobrecarga progressiva de ±5%).
+
+| Componente | Pasta | Stack | Endereço |
+|---|---|---|---|
+| Banco | `docker-compose.yml` | PostgreSQL 18 | `localhost:5432` |
+| API | `backend/` | NestJS + Prisma 7 | `http://localhost:3001` |
+| Web | `web/` | Next.js 16 (App Router) + Tailwind | `http://localhost:3000` |
+| Mobile | `mobile/` | Flutter | emulador Android → `http://10.0.2.2:3001` |
+
+### Como rodar
+
+Pré-requisitos: Node.js, Docker (ou um PostgreSQL 18 local) e Flutter.
+
+```bash
+# 1. Banco
+docker compose up -d
+
+# 2. API (terminal 1)
+cd backend
+cp .env.example .env          # ajuste DATABASE_URL / JWT_SECRET se precisar
+npm install
+npx prisma migrate dev        # aplica as migrations
+npx prisma generate           # gera o client em backend/src/generated/prisma
+npx tsx prisma/seed.ts        # opcional: dados de exemplo
+npm run start:dev             # http://localhost:3001
+
+# 3. Web (terminal 2)
+cd web
+npm install
+npm run dev                   # http://localhost:3000 (API_URL padrão: http://127.0.0.1:3001)
+
+# 4. Mobile (terminal 3)
+cd mobile
+flutter pub get
+flutter run                   # emulador Android usa http://10.0.2.2:3001
+# dispositivo físico: flutter run --dart-define=API_URL=http://<ip-do-pc>:3001
+```
+
+Testes do backend: `npm test`, `npm run test:e2e` e `npm run lint`. Testes do mobile: `flutter test`. Exemplos de chamadas à API em `backend/requests/*.http`.
+
+### Documentação
+
+- [`docs/visao.md`](docs/visao.md) — visão do produto
+- [`docs/prd.md`](docs/prd.md) — requisitos, regras de negócio e modelo de dados
+- [`docs/contrato-api.md`](docs/contrato-api.md) — endpoints da API
+- [`docs/equipe.md`](docs/equipe.md) — equipe e contribuições
+- [`docs/relatorio.md`](docs/relatorio.md) — diário técnico (decisões, dificuldades, uso de IA)
+
+> As seções abaixo são o **template original da disciplina** (passo a passo de criação dos projetos), mantido como referência. Onde houver divergência de portas ou caminhos, vale o que está acima.
+
+---
+
 # Projeto integrador — Programação Web e Mobile
 
 Repositório-modelo do trabalho final: **um serviço e dois clientes**. Uma API REST concentra as regras de negócio e os dados; um cliente web e um aplicativo mobile a consomem.
@@ -335,8 +391,8 @@ Precisa de três terminais, com o banco já no ar:
 
 ```bash
 docker compose up -d                       # banco, se o grupo usa Docker
-cd backend && npm run start:dev            # terminal 1 — API em :3000
-cd web     && npm run dev -- -p 3001       # terminal 2 — web em :3001
+cd backend && npm run start:dev            # terminal 1 — API em :3001
+cd web     && npm run dev                  # terminal 2 — web em :3000
 cd mobile  && flutter run                  # terminal 3 — app no emulador
 ```
 
