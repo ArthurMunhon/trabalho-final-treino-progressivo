@@ -81,22 +81,22 @@
 
 #### Etapa 2 — Backend
 
-- **Quem conduziu:** _(a preencher)_
+- **Quem conduziu:** Arthur Munhon
 - **Ferramenta e data:** _(a preencher)_
-- **Objetivo da tarefa:** _(a preencher)_
+- **Objetivo da tarefa:** ver exemplos de CRUD no NestJS com Prisma para usar de base nos módulos do MVP (exercícios, alunos, fichas e sessões).
 - **Prompt utilizado:**
   ```
-  (cole aqui o prompt principal)
+  (o prompt não foi guardado)
   ```
 - **Trecho aproveitado:**
   ```
-  (cole o trecho de codigo gerado que foi usado)
+  (nenhum trecho foi colado direto; os exemplos serviram de referência)
   ```
-- **Análise crítica:**
+- **Análise crítica:** a IA foi usada como consulta para ver a estrutura de módulo, controller, DTO e service. As regras de negócio (RN-001 a RN-005) foram escritas a partir do PRD.
 - **A resposta usava versão desatualizada da stack?** Qual:
 - **Correções feitas manualmente e por quê:**
-- **Evidência no repositório** (commit ou PR):
-- **Como validou:**
+- **Evidência no repositório** (commit ou PR): `6a8cdc9`
+- **Como validou:** chamadas de exemplo em `backend/requests/*.http` para cada recurso.
 
 ---
 
@@ -170,7 +170,7 @@
 
 ### 2.4 Reflexão sobre o uso de IA
 
-_(a preencher pelo grupo na Etapa 5)_
+A IA ajudou mais quando foi usada como apoio e não como atalho. No backend serviu para ver exemplos antes de escrever os módulos. No mobile foi usada passo a passo: ela explicava, e o código era escrito e testado por nós. O que mais pesou foi conferir o que ela sugeria com o material da aula e com o próprio projeto: a primeira versão do cliente HTTP do app fugia do padrão da disciplina e foi refeita, e a ideia de usar `GET /alunos/:id` no app não funcionava porque a rota exige token. Ler o código antes de aceitar uma sugestão virou regra.
 
 ---
 
@@ -180,26 +180,26 @@ _(a preencher pelo grupo na Etapa 5)_
 
 ### Etapa 0 — Concepção
 
-**Período:** _(a preencher)_ · **Redigido por:** _(a preencher)_
+**Período:** 01/09/26 · **Redigido por:** Arthur Munhon
 
 **O que foi feito:** repositório criado a partir do modelo da disciplina (`9066af4`); escolha do tema e da divisão do trabalho.
 
 **Como o tema foi escolhido, e o que foi descartado no caminho:** _(a preencher)_
 
-**Dificuldades:** _(a preencher)_
+**Dificuldades:** alinhar as ideias dos dois sobre o tema e o tamanho do escopo.
 
 ---
 
 ### Etapa 1 — Contrato e fundação
 
-**Período:** _(a preencher)_ · **Redigido por:** _(a preencher)_
+**Período:** 01/09/26 a 12/09/26 · **Redigido por:** Arthur Munhon
 
 **O que foi feito:**
 
 | Frente | O que foi feito | Por quem |
 |---|---|---|
 | Modelo de dados | Schema Prisma com Personal, Aluno, Exercicio, Ficha, ItemFicha, SessaoTreino e SerieExecutada | Arthur |
-| Contrato da API | Versão 1.0 do contrato (12/09/26) | _(a preencher)_ |
+| Contrato da API | Versão 1.0 do contrato (12/09/26) | Arthur (versionado em `6a8cdc9`) |
 | Projeto do backend | Estrutura NestJS e integração do Prisma 7 (`8398cd8`, `3704903`) | Arthur |
 
 **Decisões técnicas:**
@@ -208,15 +208,15 @@ _(a preencher pelo grupo na Etapa 5)_
 |---|---|---|---|
 | Identificadores uuid | inteiros autoincrementais | Não expõe a quantidade de registros e evita colisão entre ambientes | IDs longos nas URLs |
 
-**Dificuldades:** _(a preencher)_
+**Dificuldades:** coordenar as ideias para o modelo de dados e o contrato antes de começar o código.
 
-**O que ficou para a próxima etapa:** _(a preencher)_
+**O que ficou para a próxima etapa:** os CRUDs do MVP e a regra de sobrecarga progressiva, feitos na Etapa 2.
 
 ---
 
 ### Etapa 2 — Backend · Checkpoint 1
 
-**Período:** _(a preencher)_ · **Redigido por:** _(a preencher)_
+**Período:** 13/09/26 a 23/10/26 · **Redigido por:** Arthur Munhon
 
 **O que foi implementado:** CRUDs do MVP e sobrecarga progressiva (`6a8cdc9`); login do personal com JWT, guard e filtro de alunos por personal (`f7ca2c8`, `5cf1dae`, `dd95ebb`, `3506076`); seed (`c2211cc`).
 
@@ -233,7 +233,7 @@ _(a preencher pelo grupo na Etapa 5)_
 |---|---|---|---|
 | `POST /auth/login` → `POST /personal/login` + `POST /personal/register` | Rota e formato da resposta (`personal` em vez de `usuario`) | ambos | Sim, na versão 1.2 (23/11/26) |
 
-**Dificuldades:** _(a preencher)_
+**Dificuldades:** coordenar as ideias da autenticação: o contrato previa um login único e o backend ficou com rotas separadas para o personal, o que só foi acertado no contrato 1.2.
 
 **O que ficou para a próxima etapa:** guard nas rotas de catálogo, fichas e sessões (ainda pendente — contrato, seção 2.3).
 
@@ -241,7 +241,7 @@ _(a preencher pelo grupo na Etapa 5)_
 
 ### Etapa 3 — Cliente web · Checkpoint 2
 
-**Período:** _(a preencher)_ · **Redigido por:** _(a preencher)_
+**Período:** 25/09/26 a 24/11/26 · **Redigido por:** _(a preencher)_
 
 **O que foi implementado:** _(a preencher pelo responsável web)_
 
@@ -268,15 +268,21 @@ _(a preencher pelo grupo na Etapa 5)_
 
 ### Etapa 4 — App mobile · Checkpoint 3
 
-**Período:** de 12/11/26 a _(em andamento)_ · **Redigido por:** Arthur Munhon
+**Período:** de 12/11/26 a 26/11/26 · **Redigido por:** Arthur Munhon
 
 **O que foi implementado:**
 - Projeto Flutter, modelos (`Aluno`, `Exercicio`, `Ficha`, `ItemFicha`, `SessaoTreino`) e dados mock (`15eb1dc`, `717fda9`)
 - Tela da ficha e registro de treino, ainda com dados mock (`bfa9437`)
 - Rota `POST /app/login` no backend (`763ad88`)
 - Cliente `TreinoApi`, tela de login e organização em `lib/screens/` e `lib/widgets/` (`495b140`)
-- Ficha do aluno logado vinda da API (`GET /fichas?alunoId=`) (`67e71bb`). Por enquanto o app mostra a primeira ficha da lista; com as fichas por dia da semana (RF-033), precisa passar a mostrar a ficha do dia
-- Ainda falta: ficha do dia da semana, sessão de treino pela API, histórico, envio de solicitação e testes com `MockClient`
+- Ficha do aluno logado vinda da API (`GET /fichas?alunoId=`) (`67e71bb`)
+- Semana do aluno: os 7 dias com a ficha de cada um (RF-033), o dia de hoje destacado e dia sem ficha como repouso (`23b3c75`); botão de recarregar (`d7f67f3`)
+- Registro do treino pela API: a sessão é criada na primeira série, cada série vai para `POST /sessoes-treino/:id/series` e, ao finalizar, o app mostra as cargas recalculadas pelo backend e recarrega a semana (`586bdaf`). Testes do `TreinoApi` com `MockClient` e de `fichaDoDia`
+- Botões de + e − na carga (passo de 2,5 kg) e nas repetições (`6e104d9`)
+- Tema escuro com as mesmas cores do web (`14452ba`) e botão de sair na semana (`33f1434`)
+- Alvo do item sem `null` quando velocidade, inclinação ou carga sugerida não foram preenchidas (`91e21ba`)
+- Sessão `em_andamento` esquecida: ao abrir o registro, o app procura a sessão aberta da ficha em `GET /sessoes-treino?fichaId=` e continua nela, com as séries já feitas, em vez de receber `409` ao criar outra (`2e7f318`)
+- Não implementado: histórico das sessões (RF-051), que ainda usa os dados mock; envio de solicitação pelo app (RF-060), que ficou fora do escopo entregue; registro de itens de cardio, porque a API não tem campos de duração na série (uma ficha só de cardio não pode ser finalizada)
 
 **Decisões técnicas:**
 
@@ -306,7 +312,7 @@ _(a preencher pelo grupo na Etapa 5)_
 
 ### Etapa 5 — Integração e fechamento
 
-**Período:** _(a preencher)_ · **Redigido por:** _(a preencher)_
+**Período:** a partir de 26/11/26 até a entrega · **Redigido por:** Arthur Munhon e Othavio Pedretti
 
 **O que foi ajustado para os três componentes conversarem:**
 
@@ -360,16 +366,26 @@ A sobrecarga progressiva é calculada só no backend (`POST /sessoes-treino/:id/
 
 ### 6.1 O que funcionou bem
 
+- A divisão por cliente: cada um liderou uma parte (web e mobile) e o backend foi feito pelos dois.
+- Deixar a sobrecarga progressiva só no backend. O web e o app só mostram o resultado, e a regra fica num lugar só.
+- O contrato da API como referência entre os dois clientes.
+- A conversa rápida pelo WhatsApp quando alguém travava.
+
 ### 6.2 O que faria diferente
+
+- Fechar o contrato antes de começar a codar e mudar menos durante o projeto.
+- Começar o mobile antes. Ele ficou para o fim, e o histórico, a solicitação pelo app e o registro de cardio ficaram de fora.
+- Revisar o código um do outro com mais frequência.
+- Escrever o diário durante as etapas, e não no final.
 
 ### 6.3 Principais aprendizados
 
 | Componente | Aprendizado |
 |---|---|
-| Backend | |
+| Backend | Organizar a API em módulos com controller, DTO e service, validar a entrada com `class-validator` e usar transação no Prisma quando duas escritas precisam acontecer juntas, como ao finalizar a sessão |
 | Web | |
-| Mobile | |
-| Integração e processo | |
+| Mobile | Consumir uma API no Flutter com um cliente testável (`http.Client` injetável e `MockClient`), mostrar uma mensagem diferente para cada tipo de falha e lidar com estado que fica no servidor, como a sessão em andamento que precisava ser retomada |
+| Integração e processo | O contrato precisa mudar antes do código: quando o backend muda sem o contrato, o outro cliente quebra. Commits pequenos e com mensagem clara ajudaram a entender o histórico na hora de escrever os documentos |
 
 ### 6.4 Autoavaliação
 
@@ -395,5 +411,6 @@ A sobrecarga progressiva é calculada só no backend (`POST /sessoes-treino/:id/
 |---|---|---|---|
 | 0.1 | 23/11/26 | Preenche ambiente, uso de IA e diário da Etapa 4, autenticação do mobile e registros das etapas anteriores levantados pelo Git | Arthur Munhon |
 | 0.2 | 25/11/26 | Registra a ficha vinda da API no mobile e a mudança de contrato das fichas por dia da semana | Arthur Munhon |
+| 0.3 | 26/11/26 | Fecha a Etapa 4 do mobile: semana, registro de treino pela API, retomada da sessão aberta, botões de carga e repetições, tema e o que ficou sem implementar | Arthur Munhon |
 | | | | |
 | 1.0 | | Versão final | |

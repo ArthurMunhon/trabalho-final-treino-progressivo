@@ -95,13 +95,13 @@ O Treino Progressivo permite que um personal trainer monte fichas de treino para
 | ID | Descrição | Prioridade | Persona | Cliente |
 |---|---|---|---|---|
 | RF-050 | O personal consulta a evolução de carga de um aluno em um exercício específico, ao longo do tempo | Média | Fernanda | web |
-| RF-051 | O aluno consulta o histórico das últimas sessões realizadas | Baixa | Marcos | mobile |
+| RF-051 | O aluno consulta o histórico das últimas sessões realizadas. **Não implementado:** a tela da ficha ainda mostra o histórico dos dados mock | Baixa | Marcos | mobile |
 
 ### 3.7 Solicitações de atendimento
 
 | ID | Descrição | Prioridade | Persona | Cliente |
 |---|---|---|---|---|
-| RF-060 | O aluno sem personal envia, pelo app, uma solicitação de atendimento informando o e-mail do personal | Média | Marcos | mobile |
+| RF-060 | O aluno sem personal envia, pelo app, uma solicitação de atendimento informando o e-mail do personal. **Fora do escopo entregue:** não há tela no app nem `POST /solicitacoes` no backend | Média | Marcos | mobile |
 | RF-061 | O personal vê as solicitações pendentes enviadas a ele | Média | Fernanda | web |
 | RF-062 | O personal aceita uma solicitação, e o aluno passa a ser dele | Média | Fernanda | web |
 | RF-063 | O personal recusa uma solicitação | Média | Fernanda | web |
@@ -339,18 +339,18 @@ flowchart TD
 | 5 | Etapa 4 | App mobile completo | RF-004, RF-032, RF-040 a RF-042, RF-051, RF-060 | Arthur (mobile) | Fluxo principal do aluno no emulador |
 | 6 | Etapa 5 | Integração e fechamento | RF-064 (decidir), pendências do contrato | ambos | Entrega final, relatório e vídeo |
 
-> Datas de cada sprint seguem o calendário da turma — preencher assim que publicado.
+> As sprints não tiveram datas fixas: o grupo seguiu os prazos das etapas da disciplina.
 
 ---
 
 ## 10. Critérios de aceite (MVP)
 
 - [ ] Personal cria a conta ou faz login, cadastra um exercício, cadastra um aluno e monta uma ficha completa para ele, tudo pelo web
-- [ ] Aluno entra no mobile pelo e-mail e vê a ficha montada pelo personal, com os exercícios na ordem correta
-- [ ] Aluno inicia uma sessão, registra série a série (carga e repetições) e finaliza — a carga sugerida do próximo treino é recalculada conforme RN-001
+- [x] Aluno entra no mobile pelo e-mail e vê a ficha montada pelo personal, com os exercícios na ordem correta
+- [x] Aluno inicia uma sessão, registra série a série (carga e repetições) e finaliza — a carga sugerida do próximo treino é recalculada conforme RN-001
 - [ ] Um registro criado pelo cliente web aparece corretamente no app mobile, e vice-versa
-- [ ] O app identifica o aluno pelo login simulado e vê os mesmos dados que o personal vê no cliente web
-- [ ] Aluno envia uma solicitação pelo app, o personal a vê no web, aceita, e o aluno passa a aparecer na lista de alunos dele
+- [x] O app identifica o aluno pelo login simulado e vê os mesmos dados que o personal vê no cliente web
+- [ ] ~~Aluno envia uma solicitação pelo app, o personal a vê no web, aceita, e o aluno passa a aparecer na lista de alunos dele~~ — fora do escopo entregue (RF-060)
 - [ ] Personal consulta a evolução de carga do aluno naquele exercício e vê o valor recém-calculado refletido
 
 ---
@@ -375,3 +375,4 @@ flowchart TD
 | 1.0 | 2026-09-12 | Versão inicial |
 | 1.1 | 2026-11-23 | Alinha o escopo ao que foi implementado e decidido: login simulado do aluno no app (orientação do professor em aula) e cadastro do personal pelo web; solicitações de atendimento (RF-060 a RF-064, RN-006, RN-007); itens de cardio e nome personalizado (RF-030, RN-005); cardio fora da sobrecarga progressiva (RN-001); modelo de dados, módulos, versões e responsáveis atualizados; pendências de segurança registradas |
 | 1.2 | 2026-11-25 | Fichas por dia da semana (RF-033), conforme a tela de fichas do web (`c63c927`) |
+| 1.3 | 2026-11-26 | Marca o RF-051 como não implementado e o RF-060 como fora do escopo entregue; atualiza os critérios de aceite do mobile; registra que as sprints não tiveram datas fixas |
