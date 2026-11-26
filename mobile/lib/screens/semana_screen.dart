@@ -3,6 +3,7 @@ import 'package:treino_progressivo/models/aluno.dart';
 import 'package:treino_progressivo/models/ficha.dart';
 import 'package:treino_progressivo/screens/ficha_screen.dart';
 import 'package:treino_progressivo/treino_api.dart';
+import 'package:treino_progressivo/screens/login_screen.dart';
 
 // Semana do aluno: os 7 dias, cada um com a sua ficha ou "Repouso".
 // O aluno toca no dia que quer treinar.
@@ -56,6 +57,15 @@ class _SemanaScreenState extends State<SemanaScreen> {
     if (treinou == true) _carregar();
   }
 
+  // Login é simulado (o aluno só fica em memória): sair é só voltar
+  // para a tela de login, substituindo a semana na pilha.
+  void _sair() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen(api: widget.api)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,6 +81,16 @@ class _SemanaScreenState extends State<SemanaScreen> {
         ],
       ),
       body: _corpo(),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: OutlinedButton.icon(
+            onPressed: _sair,
+            icon: const Icon(Icons.logout),
+            label: const Text('Sair'),
+          ),
+        ),
+      ),
     );
   }
 
@@ -127,7 +147,6 @@ class _SemanaScreenState extends State<SemanaScreen> {
       // Hoje fica destacado
       color: ehHoje ? cores.primaryContainer : null,
       child: ListTile(
-        leading: CircleAvatar(child: Text(nome.substring(0, 3))),
         title: Text(ehHoje ? '$nome (hoje)' : nome),
         subtitle: Text(
           ficha == null
